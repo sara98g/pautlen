@@ -55,7 +55,7 @@ List* grafo_get_raiz(const Grafo* grafo){
 }
 
 
-bool grafo_insert_raiz(Grafo* grafo, char* nombre, void* info){
+bool grafo_insert_raiz(Grafo* grafo, char* nombre, tablaSimbolosAmbitos* info){
 	Nodo* nodo = NULL;
 	
 	if (!grafo || !nombre || !info)
@@ -79,7 +79,7 @@ bool grafo_insert_raiz(Grafo* grafo, char* nombre, void* info){
 
 
 
-bool grafo_insert_node(Grafo* grafo, char* nombre, void* info, char** padres, int tam){
+bool grafo_insert_node(Grafo* grafo, char* nombre, tablaSimbolosAmbitos* info, char** padres, int tam){
 	Nodo* nodo_aux = NULL;
 	Nodo *nodo = NULL;
 	List* list_aux = NULL;
@@ -149,6 +149,24 @@ Nodo* grafo_find_nodo(Grafo* grafo, char* nombre){
 		return NULL;
 		
 	if((pos = linkedList_find(grafo_get_nodes(grafo), nodo_aux)) < 0){
+		nodo_free(nodo_aux);
+		return NULL;
+	}
+	nodo_free(nodo_aux);
+	return linkedList_get(grafo_get_nodes(grafo), pos);
+}
+
+Nodo* grafo_find_raiz(Grafo* grafo, char* nombre){
+	Nodo* nodo_aux = NULL;
+	int pos;
+	
+	if (!grafo || !nombre)
+		return NULL;
+	
+	if(!(nodo_aux = nodo_ini_cmp(nombre)))
+		return NULL;
+		
+	if((pos = linkedList_find(grafo_get_raiz(grafo), nodo_aux)) < 0){
 		nodo_free(nodo_aux);
 		return NULL;
 	}

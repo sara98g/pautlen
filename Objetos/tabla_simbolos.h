@@ -7,25 +7,31 @@
 #include "grafo.h"
 #include "hash.h"
 
-#define VARIABLE 1
-#define PARAMETRO 2
-#define FUNCION 3
-
-#define BOOLEAN 1
-#define INT 2
-
-#define ESCALAR 1
-#define VECTOR 2
-
 #define TAM_L 100
 #define MAX_TAB 64 /*tamanio de la tabla entre 1 y 64*/
+
+/***************************************************************************/
+/*Enumerados utiles para la clasificacion de la informacion de los simbolos*/
+/***************************************************************************/
 
 typedef enum {
     OK = 0, ERROR = -1
 } STATUS;
 
 typedef enum {
-    GLOBAL = 0, LOCAL = 1
+	VARIABLE = 1, PARAMETRO = 2, FUNCION = 3
+} CATEGORIA;
+
+typedef enum {
+	BOOLEAN = 1, INT = 2
+} TIPO;
+
+typedef enum {
+	ESCALAR = 1, VECTOR = 2
+} CLASE;
+
+typedef enum {
+    CERRADO = -1, GLOBAL = 0, LOCAL = 1
 } AMBITO;
 
 typedef enum {
@@ -36,13 +42,18 @@ typedef enum {
     MIEMBRO_UNICO = 0, MIEMBRO_NO_UNICO = 1
 } TIPO_MIEMBRO;
 
+
+/***************************/
+/*Diseño de la TSC y la TSA*/
+/***************************/
+
 typedef struct _tablaSimbolosAmbitos {
     TablaHash *global;
     TablaHash *local;
     AMBITO idAmbito; /*global=0 o local=1*/
     char *nombre_local;
     char *nombre_global;
-   
+ 
 } tablaSimbolosAmbitos;
 
 typedef struct _tablaSimbolosClases {
@@ -51,96 +62,97 @@ typedef struct _tablaSimbolosClases {
    
 } tablaSimbolosClases;
 
-/*******************************************************/
+/******************************************/
 /*Funciones de gestion de tablas y ambitos*/
-/*******************************************************/
+/******************************************/
 
 /**
 * iniciarTablaSimbolosClases
 *
 * Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
+* basada en un grafo e identificada con el nombre proporcionado como argumento
 **/
-int iniciarTablaSimbolosClases(tablaSimbolosClases** t, char * nombre);
+int iniciarTablaSimbolosClases(tablaSimbolosClases* t, char * nombre);
 /**
 * iniciarTablaSimbolosAmbitos
 *
 * Reserva todos los recursos para crear una tsa
-* que tenga dos tablas hash por cada ambito local/global.
+* que tenga dos tablas hash por cada ambito local/global
 **/
-int iniciarTablaSimbolosAmbitos(tablaSimbolosAmbitos **t);
+int iniciarTablaSimbolosAmbitos(tablaSimbolosAmbitos *t);
 /**
-* iniciarTablaSimbolosClases
+* destruirTablaSimbolosAmbitos
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
+* Libera todos los recursos de una tsa creada
+* 
+**/
+void destruirTablaSimbolosAmbitos(tablaSimbolosAmbitos *t);
+/**
+* abrirClase
+*
+* Realiza las tareas de añadir al grafo una nueva raíz
 **/
 int abrirClase(tablaSimbolosClases* t, char* id_clase);
 /**
-* iniciarTablaSimbolosClases
+* abrirClaseHeredaN
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
-**/
-int abrirClaseHeredaN (tablaSimbolosClases* t, AMBITO id_clase, int num_padres, char** nombres_padres);
-int cerrarClase(tablaSimbolosClases* t,
-                                       char* id_clase,
-                                       int num_atributos_clase,
-                                       int num_atributos_instancia,
-                                       int num_metodos_sobreescribibles,
-                                       int num_metodos_no_sobreescribibles);
+* Realiza las tareas de añadir al grafo un nuevo nodo
+* que debe conectarse a los nombres identificados mediante los últimos argumentos
+*
+*/
+int abrirClaseHeredaN (tablaSimbolosClases* t, char *id_clase, int num_padres, char** nombres_padres);
 /**
-* iniciarTablaSimbolosClases
+* cerrarClase
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
-**/
+* Realiza tareas asociadas con el final de la clase identificada 
+* mediante el segundo argumento
+*
+*/
+int cerrarClase(tablaSimbolosClases* t, char *id_clase, int num_atributos_clase, int num_atributos_instancia, int num_metodos_sobreescribibles, int num_metodos_no_sobreescribibles);
+/**
+* cerrarTablaSimbolosClases
+*
+* Realiza tareas asociadas con el final de la clase identificada
+* mediante el segundo argumento
+*
+*/
 int cerrarTablaSimbolosClases(tablaSimbolosClases* t);
 /**
-* iniciarTablaSimbolosClases
+* abrirAmbitoPpalMain
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
+* Realiza tareas asociadas con la apertura del ámbito principal 
+* de la tabla de símbolos por ámbitos de main
+* 
 **/
-int abrirAmbitoPpalMain(tablaAmbitos** t);
+int abrirAmbitoPpalMain(tablaSimbolosAmbitos* t);
 /**
-* iniciarTablaSimbolosClases
+* abrirAmbitoMain
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
+* Realiza tareas asociadas con la apertura del ámbito asociado
+* con una función global dentro del ámbito main
+* 
 **/
-int abrirAmbitoMain(tablaAmbitos ** t,
-                    char* id_ambito,
-                    int categoria_ambito,
-                    int tipo_ambito,
-                    int tamanio);
+int abrirAmbitoMain(tablaSimbolosAmbitos * t, char* id_ambito, int categoria_ambito, int tipo_ambito);
 /**
-* iniciarTablaSimbolosClases
+* cerrarAmbitoMain
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
+* Realiza tareas asociadas con el cierre del ámbito asociado con una 
+* función global dentro del ámbito main, cierra el ámbito actual, de hecho
+* 
 **/
 int cerrarAmbitoMain(tablaSimbolosAmbitos* t);
 /**
-* iniciarTablaSimbolosClases
+* tablaSimbolosClasesAbrirAmbitoEnClase
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
+* Realiza tareas asociadas con la apertura del ámbito asociado con un método
+*
 **/
-int tablaSimbolosClasesAbrirAmbitoEnClase(	tablaSimbolosClases * grafo,
-						char * id_clase,
-						char* id_ambito,
-						int categoria_ambito,
-						int tipo_ambito,
-						int acceso_ambito,
-						int tipo_miembro,
-						int posicion_metodo_sobre,
-						int tamanio);
+int tablaSimbolosClasesAbrirAmbitoEnClase(tablaSimbolosClases * grafo, char * id_clase, char* id_ambito, int categoria_ambito, int tipo_ambito, int acceso_ambito, int tipo_miembro, int posicion_metodo_sobre);
 /**
-* iniciarTablaSimbolosClases
+* tablaSimbolosClasesCerrarAmbitoEnClase
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
+* Realiza tareas asociadas con el cierre del ámbito asociado con un método
+* 
 **/
 int tablaSimbolosClasesCerrarAmbitoEnClase(tablaSimbolosClases * grafo, char * id_clase);
 
@@ -149,122 +161,93 @@ int tablaSimbolosClasesCerrarAmbitoEnClase(tablaSimbolosClases * grafo, char * i
 /*******************************************************/
 
 /**
-* iniciarTablaSimbolosClases
+* buscarIdEnJerarquiaDesdeClase
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
+* Busca en la jerarquía de clases (en las tablas tablaAmbitos de cada clase)
+* 
 **/
-int buscarIdEnJerarquiaDesdeClase(tablaSimbolosClases *t,
-					char * nombre_id,
-					char * nombre_clase_desde,
-					elementoTablaSimbolos ** e,
-					char * nombre_ambito_encontrado);
+int buscarIdEnJerarquiaDesdeClase(tablaSimbolosClases *t, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos * e, char * nombre_ambito_encontrado);
 /**
-* iniciarTablaSimbolosClases
+* buscarTablaSimbolosAmbitosConPrefijos
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
+* Encuentra simbolos por prefijo
+* 
 **/
-int buscarIdNoCualificado(	tablaSimbolosClases *t,
-          					tablaAmbitos *tabla_main,
-          	        char * nombre_id,
-          					char * nombre_clase_desde,
-          					elementoTablaSimbolos ** e,
-          					char * nombre_ambito_encontrado);
+int buscarTablaSimbolosAmbitosConPrefijos (tablaSimbolosAmbitos *tA, char *id, elementoTablaSimbolos *e, char *id_ambito);
 /**
-* iniciarTablaSimbolosClases
+* buscarIdNoCualificado
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
+* Se responsabiliza de la búsqueda de un identificador cuando aparece en las sentencias y se quiere usar
+* El identificador no debe ir cualificado
+* 
 **/
-int buscarIdIDCualificadoClase(	tablaSimbolosClases *t,
-                    					char * nombre_clase_cualifica,
-                    					char * nombre_id,
-                    					char * nombre_clase_desde,
-                    					elementoTablaSimbolos ** e,
-                    					char * nombre_ambito_encontrado);
+int buscarIdNoCualificado(tablaSimbolosClases *t, tablaAmbitos *tabla_main, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos * e, char * nombre_ambito_encontrado);
 /**
-* iniciarTablaSimbolosClases
+* buscarIdIDCualificadoClase
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
+* Busca identificadores cualificados cuando aparecen así en la parte de sentencias (expresiones del tipo <identificador>.<identificador>)
+* Se utiliza cuando se cualifica con el nombre de una clase
+* 
 **/
-int buscarIdCualificadoInstancia(	tablaSimbolosClases *t,
-                        					tablaSimbolosAmbitos * tabla_main,
-                        					char * nombre_instancia_cualifica,
-                        					char * nombre_id,
-                        					char * nombre_clase_desde,
-                        					elementoTablaSimbolos ** e,
-                        					char * nombre_ambito_encontrado);
+int buscarIdIDCualificadoClase(tablaSimbolosClases *t, char * nombre_clase_cualifica, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos * e, char * nombre_ambito_encontrado);
+/**
+* buscarIdCualificadoInstancia
+*
+* Busca identificadores cualificados cuando aparecen así en la parte de sentencias (expresiones del tipo <identificador>.<identificador>)
+* Se utiliza cuando se cualifica con el nombre de una instancia
+* 
+**/
+int buscarIdCualificadoInstancia(tablaSimbolosClases *t, tablaSimbolosAmbitos * tabla_main, char * nombre_instancia_cualifica, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos * e, char * nombre_ambito_encontrado);
 
 /**********************************************************/
 /*Busqueda de identificadores en la parte de declaraciones*/
 /**********************************************************/
 
 /**
-* iniciarTablaSimbolosClases
+* buscarParaDeclararMiembroClase
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
+* Realiza la búsqueda de identificadores cuando, al declararlos, se intenta insertarlos en la tabla de símbolos
+* Se utiliza cuando se quiere declarar un miembro de clase (ya sea método o atributo)
+* 
 **/
-int buscarParaDeclararMiembroClase( tablaSimbolosClases *t,
-					  char * nombre_clase_desde,
-					  char * nombre_miembro,
-					  elementoTablaSimbolos ** e,
-					  char * nombre_ambito_encontrado);
+int buscarParaDeclararMiembroClase( tablaSimbolosClases *t, char * nombre_clase_desde, char * nombre_miembro, elementoTablaSimbolos * e, char * nombre_ambito_encontrado);
 /**
 * iniciarTablaSimbolosClases
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
+* Realiza la búsqueda de identificadores cuando, al declararlos, se intenta insertarlos en la tabla de símbolos
+* Se utiliza cuando se quiere declarar un miembro de instancia
+* 
 **/
-int buscarParaDeclararMetodoClase(	tablaSimbolosClases *t,
-						char * nombre_clase_desde,
-						char * nombre_miembro,
-						elementoTablaSimbolos ** e,
-						char * nombre_ambito_encontrado);
-						
-int buscarParaDeclararMiembroInstancia(tablaSimbolosClases *t,
-						char * nombre_clase_desde,
-						char * nombre_miembro,
-						elementoTablaSimbolos ** e,
-						char * nombre_ambito_encontrado);	
+int buscarParaDeclararMiembroInstancia(tablaSimbolosClases *t, char * nombre_clase_desde, char * nombre_miembro, elementoTablaSimbolos * e, char * nombre_ambito_encontrado);
 /**
-* iniciarTablaSimbolosClases
+* buscarTablaSimbolosAmbitoActual
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
+* Busca el símbolo id en la tabla de símbolos t (especialmente pensada para main)
+* 
 **/
-int buscarTablaSimbolosAmbitoActual(tablaAmbitos * t,
-                                    char* id,
-                                    elementoTablaSimbolos** e,
-                                    char* id_ambito);
+int buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, char* id, elementoTablaSimbolos* e, char * id_ambito);
 /**
-* iniciarTablaSimbolosClases
+* buscarTablaSimbolosClasesAmbitoActual
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
+* Esta función se utilizará en situaciones similares a la anterior pero cuando se está en un método de una clase
+* 
 **/
-int buscarTablaSimbolosClasesAmbitoActual( tablaSimbolosClases *t,
-						  char * nombre_clase,
-						  char * nombre_id,
-						  elementoTablaSimbolos ** e,
-						  char * nombre_ambito_encontrado);
+int buscarTablaSimbolosClasesAmbitoActual(tablaSimbolosClases *t, char * nombre_clase, char * nombre_id, elementoTablaSimbolos * e, char * nombre_ambito_encontrado);
 
 /********************************************************************/
 /*Funciones insercion simbolos que no involucren creacion de ambitos*/
 /********************************************************************/
 
 /**
-* iniciarTablaSimbolosClases
+* insertarTablaSimbolosClases
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
+* Realiza las tareas de inserción de un símbolo en el grafo
+* 
 **/
-int insertarTablaSimbolosClases(tablaSimbolosClases * grafo,
-					char * id_clase,
+int insertarTablaSimbolosClases(tablaSimbolosClases * grafo, char* id_clase,
 					char* id,
 					int clase,
+					int categoria,
 					int tipo,
 					int estructura,
 					int direcciones,
@@ -287,30 +270,45 @@ int insertarTablaSimbolosClases(tablaSimbolosClases * grafo,
 					int posicion_metodo_sobreescribible,
 					int num_acumulado_atributos_instancia,
 					int num_acumulado_metodos_sobreescritura,
-          int posicion_acumulada_atributos_instancia,
-          int posicion_acumulada_metodos_sobreescritura,
+    				int posicion_acumulada_atributos_instancia,
+    				int posicion_acumulada_metodos_sobreescritura,
 					int * tipo_args);
+
+/**
+* insertarTablaSimbolosClases
+*
+* Realiza las tareas de inserción de un símbolo en la TSA
+* 
+**/
+int insertarTablaSimbolosAmbitos(tablaSimbolosAmbitos * tA, char* id_clase, elementoTablaSimbolos *e);
+
 /***********************/
 /*Funcionalidad variada*/
-/**********************/
+/***********************/
+
 /**
-* iniciarTablaSimbolosClases
+* aplicarAccesos
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
+* Esta función realiza el control de acceso aplicando la política de cualificadores de acceso (hidden, secret y exposed)
+* 
 **/
-int aplicarAccesos( tablaSimbolosClases *t,
-			char * nombre_clase_ambito_actual,
-			char * clase_declaro,
-			elementoTablaSimbolos * pelem);
+int aplicarAccesos(tablaSimbolosClases *t, char * nombre_clase_ambito_actual, char * clase_declaro, elementoTablaSimbolos * pelem);
 /**
-* iniciarTablaSimbolosClases
+* tablaSimbolosClasesToDot
 *
-* Reserva todos los recursos para crear una tabla de símbolos
-* basada en un grafo e identificada con el nombre proporcionado como argumento.
+* Esta función genera el fichero que contiene el gráfico en formato dot de la tabla de simbolos de clases 
+* y que tiene como nombre el nombre de la tabla (con el que se creó) con la extensión .dot.
+* 
 **/
 tablaSimbolosClases * tablaSimbolosClasesToDot(tablaSimbolosClases * grafo);
-
-
+/**
+* tablaSimbolosClasesANasm
+*
+* Esta funcion abre un fichero ensamblador y se escribe el codigo NASM necesario
+* para que contenga la TS y se pueda unir al codigo ensamblador del resto de la
+* generacion para componer la version de bajo nivel que genera nuestro compilador
+* 
+**/
+int tablaSimbolosClasesANasm(tablaSimbolosClases *t);
 
 #endif /*TABLA_SIMBOLOS*/

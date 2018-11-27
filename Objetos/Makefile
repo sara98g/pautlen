@@ -4,13 +4,17 @@ LFLAGS = -o
 
 LDLIBS1 =
 LDLIBS2 =
+LDLIBS3 =
 
 DEPENDENCIAS1 = list.o functions.o
 DEPENDENCIAS2 = grafo.o nodo.o list.o
+DEPENDENCIAS3 = hash.o tabla_simbolo.o
 
 EXE1 = test_lista
 EXE2 = test_grafo
-EXE = $(EXE1) $(EXE2)
+EXE3 = main_hash
+EXE = $(EXE1) $(EXE2) $(EXE3)
+
 
 all: $(EXE)
 
@@ -45,20 +49,34 @@ $(EXE2) : % : %.o $(DEPENDENCIAS2)
 	@echo "# Ha cambiado $<"
 	$(CC) $(LFLAGS) $@ $@.o $(DEPENDENCIAS2) $(LDLIBS2)
 	@echo ""
-	
+
+	$(EXE3) : % : %.o $(DEPENDENCIAS3)
+		@echo "#---------------------------"
+		@echo "# Generando $@"
+		@echo "# Depende de $^"
+		@echo "# Ha cambiado $<"
+		$(CC) $(LFLAGS) $@ $@.o $(DEPENDENCIAS3) $(LDLIBS3)
+		@echo ""
+
 # Comandos de compilacion de ficheros objeto
 
 
 list.o : list.c list.h
 	$(CC) $(CFLAGS) -c -o $@ $<
-	
+
 functions.o : functions.c functions.h
 	$(CC) $(CFLAGS) -c -o $@ $<
-	
+
 grafo.o : grafo.c grafo.h nodo.h list.h
 	$(CC) $(CFLAGS) -c -o $@ $<
-	
+
 nodo.o : nodo.c nodo.h list.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+hash.o : hash.c hash.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+tabla_simbolo.o : tabla_simbolo.c tabla_simbolo.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 # Comandos ejecutables
