@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
+#include "tabla_simbolos.h"
 
+#include "omicron.h"
 
 extern int yyparse();
 extern void yyerror(char *e);

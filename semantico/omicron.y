@@ -5,7 +5,7 @@
   #include "omicron.h"
   #include "generacion.h"
   #include "tabla_simbolos.h"
-  
+
   extern int yylex();
   extern int yyleng;
 
@@ -13,15 +13,16 @@
   extern FILE* salida;
   extern int columna;
   extern int line;
+  extern char* idclase;
   void yyerror( char *s);
-  
+
   int clase_actual, tipo_actual, tamanio_actual;
-  
+
 
 %}
 
   %union{
-        tip_atributo atributos;
+        tipo_atributo atributos;
 
   }
 
@@ -78,9 +79,9 @@
 
   %token <atributos> TOK_IDENTIFICADOR
   %token <atributos> TOK_CONSTANTE_ENTERA
-  
+
   %type <atributos> exp
-  
+
   %left '+' '-' TOK_OR
   %left '*' '/' TOK_AND
   %right NEG '!'
@@ -96,12 +97,12 @@ programa: iniciar_TS TOK_MAIN '{' declaraciones escribir_TS funciones inicio_mai
 /*REVISAR CON LA TABLA DE SIMBOLOS*/
 iniciar_TS: /*vacio*/
         {
-                
+
         escribir_subseccion_data(salida);
         escribir_cabecera_bss(salida);
-                
+
         }
-        
+
 escribir_TS: /*vacio*/
         {
                 escribirTS(); /*con cada simbolo -> declaracion variables*/
@@ -217,6 +218,8 @@ bloque: condicional {fprintf(salida,";R:\tbloque: condicional\n");}
 
 asignacion: identificador '=' exp {
                 fprintf(salida,";R:\tasignacion: identificador '=' exp\n");
+                //elementoTablaSimbolos * e = NULL;
+                // buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, ,e, GLOBAL)
                 //Buscar_TS --> e
                 //if e.tipo == $3.tipo
                   //      asignar()
@@ -264,7 +267,7 @@ exp:    exp '+' exp {fprintf(salida,";R:\texp: exp '+' exp \n");}
         | constante  {
                 fprintf(salida,";R:\texp: constante \n");
                 //$$.tipo = $1.tipo
-                //$$.es_direccion = $1.es_direccion      
+                //$$.es_direccion = $1.es_direccion
         }
         | '(' exp ')'  {fprintf(salida,";R:\texp:'(' exp ')' \n");}
         | '(' comparacion ')'  {fprintf(salida,";R:\texp:'(' comparacion ')' \n");}
@@ -294,31 +297,115 @@ comparacion: exp TOK_IGUAL exp {fprintf(salida,";R:\tcomparacion: exp TOK_IGUAL 
         | exp '>' exp {fprintf(salida,";R:\tcomparacion: exp > exp \n");}
         ;
 
-constante: constante_logica {fprintf(salida,";R:\tconstante: constante_logica\n");}
+constante: constante_logica {fprintf(salida,";R:\tconstante: constante_logica\n");
+                $$.tipo = $1.tipo
+                $$.es_direccion = $1.es_direccion
+        }
         | constante_entera  {fprintf(salida,";R:\tconstante: constante_entera\n");
-                //$$.tipo = $1.tipo
-                //$$.es_direccion = $1.es_direccion
+                $$.tipo = $1.tipo
+                $$.es_direccion = $1.es_direccion
         }
         ;
-constante_logica: TOK_TRUE {fprintf(salida,";R:\tconstante_logica: TOK_TRUE\n");}
-        | TOK_FALSE {fprintf(salida,";R:\tconstante_logica: TOK_FALSE\n");}
+constante_logica: TOK_TRUE {fprintf(salida,";R:\tconstante_logica: TOK_TRUE\n");
+                    $$.tipo = BOOLEAN;
+                    $$.es_direccion = 0;
+        }
+        | TOK_FALSE {fprintf(salida,";R:\tconstante_logica: TOK_FALSE\n");
+                    $$.tipo = BOOLEAN;
+                    $$.es_direccion = 0;
+
+        }
         ;
 constante_entera: TOK_CONSTANTE_ENTERA {
                 fprintf(salida,";R:\tconstante_entera: TOK_CONSTANTE_ENTERA\n");
-                // $$.tipo = $1.tipo
-                //$$.es_direccion = 0
+                $$.tipo = INT
+                $$.es_direccion = 0
                 //escribir_operando($1.valor_entero....)
         }
         ;
 
 
-identificador: TOK_IDENTIFICADOR 
+identificador: TOK_IDENTIFICADOR
         {
                 fprintf(salida. ";R:\tidentificador: TOK_IDENTIFICADOR");
-                if($1.lexema esta dentro de TS) /*Ver con fncion de TS*/
-                        /*Debe ser unico, error semantico*/
+                elementoTablaSimbolos * e = NULL;
+                char* ambito;
+                e = nodo_set_ElementoTablaSimbolos(e,
+                                          $1.lexema,
+                													0,
+                													VARIABLE,
+                													$1.tipo,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													1,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                								        	0,
+                								        	0,
+                													NULL);
+                if(buscarTablaSimbolosClasesAmbitoActual(ts_c, idclase, $1.lexema, e, ambito) == ERROR){
+                  fprintf(salida,"Error al insertar en la TS, elemento ya insertado\n");
+                  exit(Error);
+                }
+
+
                 else{
-                        insertar_TS();
+                  if($1.tipo == BOOLEAN || $1.tipo==INT){
+                    if(insertarTablaSimbolosClases(ts_c,
+                                            idclase,
+                                            $1.lexema,
+                                            0,
+                                            VARIABLE,
+                                            $1.tipo,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            1,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            NULL) == ERROR){
+                        fprintf(salida, "Error al insertart\n");
+                        exit(Error);
+                      }
+                  }
+                  else{
+                    fprintf(salida, "El elemento a insertar no es de tipo boolean o int\n");
+                    exit(Error);
+                  }
+
                 }
         }
         ;
@@ -331,7 +418,6 @@ void yyerror(char * s)
 {
   if(yychar != TOK_ERROR)
     printf("ERROR SINTACTICO: %d:%d\n",line, columna-yyleng);
-    cerrarTS(); /*REVISAR CON LA TABLA DE SIMBOLOS*/
     escribir_fin(salida); /*O en el .c (CREO)*/
 
 }

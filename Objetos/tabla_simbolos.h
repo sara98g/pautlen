@@ -1,66 +1,34 @@
 #ifndef TABLA_SIMBOLOS
 #define TABLA_SIMBOLOS
 
-#include <stdio.h>
-#include <stdlib.h>
 
-#include "grafo.h"
+typedef struct _tablaSimbolosAmbitos tablaSimbolosAmbitos;
+typedef struct _tablaSimbolosClases tablaSimbolosClases;
+
+
+#include "nodo.h"
 #include "hash.h"
-
-#define TAM_L 100
-#define MAX_TAB 64 /*tamanio de la tabla entre 1 y 64*/
-
-/***************************************************************************/
-/*Enumerados utiles para la clasificacion de la informacion de los simbolos*/
-/***************************************************************************/
-
-typedef enum {
-    OK = 0, ERROR = -1
-} STATUS;
-
-typedef enum {
-	VARIABLE = 1, PARAMETRO = 2, FUNCION = 3
-} CATEGORIA;
-
-typedef enum {
-	BOOLEAN = 1, INT = 2
-} TIPO;
-
-typedef enum {
-	ESCALAR = 1, VECTOR = 2
-} CLASE;
-
-typedef enum {
-    CERRADO = -1, GLOBAL = 0, LOCAL = 1
-} AMBITO;
-
-typedef enum {
-    NINGUNO = 0, ACCESO_CLASE = 1, ACCESO_HERENCIA = 2, ACCESO_TODOS = 3
-} TIPO_ACCESO;
-
-typedef enum {
-    MIEMBRO_UNICO = 0, MIEMBRO_NO_UNICO = 1
-} TIPO_MIEMBRO;
+#include "grafo.h"
 
 
 /***************************/
 /*Diseño de la TSC y la TSA*/
 /***************************/
 
-typedef struct _tablaSimbolosAmbitos {
+struct _tablaSimbolosAmbitos {
     TablaHash *global;
     TablaHash *local;
     AMBITO idAmbito; /*global=0 o local=1*/
     char *nombre_local;
     char *nombre_global;
  
-} tablaSimbolosAmbitos;
+};
 
-typedef struct _tablaSimbolosClases {
+struct _tablaSimbolosClases {
     Grafo *grafo;
     char *nombre;
    
-} tablaSimbolosClases;
+};
 
 /******************************************/
 /*Funciones de gestion de tablas y ambitos*/
@@ -72,14 +40,14 @@ typedef struct _tablaSimbolosClases {
 * Reserva todos los recursos para crear una tabla de símbolos
 * basada en un grafo e identificada con el nombre proporcionado como argumento
 **/
-int iniciarTablaSimbolosClases(tablaSimbolosClases* t, char * nombre);
+tablaSimbolosClases *iniciarTablaSimbolosClases(char * nombre);
 /**
 * iniciarTablaSimbolosAmbitos
 *
 * Reserva todos los recursos para crear una tsa
 * que tenga dos tablas hash por cada ambito local/global
 **/
-int iniciarTablaSimbolosAmbitos(tablaSimbolosAmbitos *t);
+tablaSimbolosAmbitos *iniciarTablaSimbolosAmbitos();
 /**
 * destruirTablaSimbolosAmbitos
 *
@@ -181,7 +149,7 @@ int buscarTablaSimbolosAmbitosConPrefijos (tablaSimbolosAmbitos *tA, char *id, e
 * El identificador no debe ir cualificado
 * 
 **/
-int buscarIdNoCualificado(tablaSimbolosClases *t, tablaAmbitos *tabla_main, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos * e, char * nombre_ambito_encontrado);
+int buscarIdNoCualificado(tablaSimbolosClases *t, tablaSimbolosAmbitos *tabla_main, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos * e, char * nombre_ambito_encontrado);
 /**
 * buscarIdIDCualificadoClase
 *
@@ -233,7 +201,20 @@ int buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, char* id, elemento
 * 
 **/
 int buscarTablaSimbolosClasesAmbitoActual(tablaSimbolosClases *t, char * nombre_clase, char * nombre_id, elementoTablaSimbolos * e, char * nombre_ambito_encontrado);
-
+/**
+* buscarParaDeclararIdTablaSimbolosAmbitos
+*
+* Esta función realiza la busqueda previa a la declaracion de un identificador de cualquier tipo fuera de la jerarquia de clases
+* 
+**/
+int buscarParaDeclararIdTablaSimbolosAmbitos(tablaSimbolosAmbitos *t, char *id, elementoTablaSimbolos *e, char*idAmbito);
+/**
+* buscarParaDeclararIdLocalEnMetodo
+*
+* Esta función realiza la busqueda previa a la declaracion de un identificador local en un metodo de una clase
+* 
+**/
+int buscarParaDeclararIdLocalEnMetodo(tablaSimbolosClases *t, char *nombre_clase, char *nombre_id, elementoTablaSimbolos *e, char *nombre_ambito_encontrado);
 /********************************************************************/
 /*Funciones insercion simbolos que no involucren creacion de ambitos*/
 /********************************************************************/

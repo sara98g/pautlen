@@ -1,18 +1,17 @@
 #ifndef NODO_H
 #define NODO_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
 
-#include "list.h"
-#include "tabla_simbolos.h"
+#include <stdbool.h>
 
 typedef struct _Nodo Nodo;
 
+#include "list.h"
+#include "tabla_simbolos.h"
+#include "hash.h"
 
-Nodo* nodo_ini(char *nombre, tablaSimbolosAmbitosbuscar*info, List *padres);
+
+Nodo* nodo_ini(char *nombre, tablaSimbolosAmbitos *info, List *padres);
 Nodo* nodo_ini_cmp(char* nombre);
 void* nodo_copiar(const void* nodo);
 

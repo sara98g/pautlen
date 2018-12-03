@@ -1,12 +1,16 @@
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
 #include "hash.h"
 
 
 elementoTablaSimbolos * nodo_crearElementoTablaSimbolos(){
-	if (!e){
-		return NULL;
-	}
+	elementoTablaSimbolos *e;
+	
 	e = (elementoTablaSimbolos*)malloc(sizeof(elementoTablaSimbolos));
-	e->clave = (char *)malloc(((strlen(nombre))+1)* sizeof(char));
+	
+	/*e->clave = (char *)malloc(TAM_L+1)* sizeof(char));*/
 	strcpy(e->clave, "");
 	e->tipo_args = (int*)malloc(sizeof(int));
 	e->categoria = VARIABLE;
@@ -35,7 +39,7 @@ int nodo_free_ElementoTablaSimbolos(elementoTablaSimbolos * e){
 	if (!e){
 		return ERROR;
 	}
-	free(e->clave);
+	/*free(e->clave);*/
 	free(e->tipo_args);
 	free(e);
 	return OK;
@@ -46,7 +50,7 @@ elementoTablaSimbolos * nodo_get_ElementoTablaSimbolos(NodoHash *n){
     if (!n){
         return NULL;
     }
-    return nh->e;
+    return n->info;
 }
 
 elementoTablaSimbolos * nodo_set_ElementoTablaSimbolos(elementoTablaSimbolos *e,
@@ -125,6 +129,12 @@ TablaHash* crearTablaHash(int tam) {
         }
         th->tam = tam;
     }
+    
+    if (!(th->lista = linkedList_ini(NULL, NULL, NULL, NULL, false))){
+		free(th);
+		return NULL;
+	}
+    
     return th;
 }
 
@@ -157,6 +167,7 @@ int eliminarTablaHash(TablaHash *th) {
                 }
             }
             free(th->tabla);
+            linkedList_free(th->lista);
         }
         free(th);
     }
@@ -189,7 +200,8 @@ NodoHash* crearNodoHash(char *clave, elementoTablaSimbolos *info) {
 	NodoHash *nh;
 
     if ((nh = (NodoHash *) malloc(sizeof(NodoHash)))) {
-        if (!nh->info = nodo_crearElementoTablaSimbolos()){
+    	nh->info = nodo_crearElementoTablaSimbolos();
+        if (!nh->info){
         	free(nh);
 			return NULL;
         }
@@ -202,6 +214,16 @@ NodoHash* crearNodoHash(char *clave, elementoTablaSimbolos *info) {
         nh->siguiente = NULL;
     }
     return nh;
+}
+void destruirNodoHash(NodoHash *nh){
+	if (!nh){
+		return;
+	}
+	free(nh->clave);
+	nh->siguiente = NULL;
+	nodo_free_ElementoTablaSimbolos(nh->info);
+	free(nh);
+	return;
 }
 
 int insertarNodoHash(TablaHash *th, char *clave, elementoTablaSimbolos *info) {
@@ -231,6 +253,8 @@ int insertarNodoHash(TablaHash *th, char *clave, elementoTablaSimbolos *info) {
     	th->tabla[ind] = n;
     }
 
+	linkedList_insert_last(th->lista, clave);
+	
     return OK;
 }
 

@@ -1,19 +1,20 @@
 CC = gcc
-CFLAGS = -Wall -ansi -pedantic -g
+CFLAGS = -Wall -g
 LFLAGS = -o
 
 LDLIBS1 =
 LDLIBS2 =
 LDLIBS3 =
+LDLIBS4 =
 
 DEPENDENCIAS1 = list.o functions.o
-DEPENDENCIAS2 = grafo.o nodo.o list.o
-DEPENDENCIAS3 = hash.o tabla_simbolo.o
+DEPENDENCIAS2 = grafo.o nodo.o list.o tabla_simbolos.o
+DEPENDENCIAS3 = hash.o tabla_simbolos.o tabla_simbolos.o
+DEPENDENCIAS4 = tabla_simbolos.o hash.o grafo.o nodo.o list.o
 
-EXE1 = test_lista
-EXE2 = test_grafo
-EXE3 = main_hash
-EXE = $(EXE1) $(EXE2) $(EXE3)
+
+EXE4 = pruebaTS
+EXE = $(EXE4)
 
 
 all: $(EXE)
@@ -50,13 +51,21 @@ $(EXE2) : % : %.o $(DEPENDENCIAS2)
 	$(CC) $(LFLAGS) $@ $@.o $(DEPENDENCIAS2) $(LDLIBS2)
 	@echo ""
 
-	$(EXE3) : % : %.o $(DEPENDENCIAS3)
-		@echo "#---------------------------"
-		@echo "# Generando $@"
-		@echo "# Depende de $^"
-		@echo "# Ha cambiado $<"
-		$(CC) $(LFLAGS) $@ $@.o $(DEPENDENCIAS3) $(LDLIBS3)
-		@echo ""
+$(EXE3) : % : %.o $(DEPENDENCIAS3)
+	@echo "#---------------------------"
+	@echo "# Generando $@"
+	@echo "# Depende de $^"
+	@echo "# Ha cambiado $<"
+	$(CC) $(LFLAGS) $@ $@.o $(DEPENDENCIAS3) $(LDLIBS3)
+	@echo ""
+	
+$(EXE4) : % : %.o $(DEPENDENCIAS4)
+	@echo "#---------------------------"
+	@echo "# Generando $@"
+	@echo "# Depende de $^"
+	@echo "# Ha cambiado $<"
+	$(CC) $(LFLAGS) $@ $@.o $(DEPENDENCIAS4) $(LDLIBS4)
+	@echo ""
 
 # Comandos de compilacion de ficheros objeto
 
@@ -67,30 +76,24 @@ list.o : list.c list.h
 functions.o : functions.c functions.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-grafo.o : grafo.c grafo.h nodo.h list.h
+grafo.o : grafo.c grafo.h nodo.h list.h tabla_simbolos.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-nodo.o : nodo.c nodo.h list.h
+nodo.o : nodo.c nodo.h list.h tabla_simbolos.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-hash.o : hash.c hash.h
+hash.o : hash.c hash.h tabla_simbolos.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-tabla_simbolo.o : tabla_simbolo.c tabla_simbolo.h
+tabla_simbolos.o : tabla_simbolos.c tabla_simbolos.h grafo.h hash.h list.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 # Comandos ejecutables
 
-test_lista_exe:
-	@echo Ejecutando test_lista
-	@./test_lista
-test_lista_test:
-	@echo Ejecutando test_lista con valgrind
-	@valgrind --trace-children=yes --leak-check=full --track-origins=yes --show-leak-kinds=all ./test_lista
-
-test_grafo_exe:
-	@echo Ejecutando test_grafo
-	@./test_grafo
-test_grafo_test:
-	@echo Ejecutando test_grafo con valgrind
-	@valgrind --trace-children=yes --leak-check=full --track-origins=yes --show-leak-kinds=all ./test_grafo
+	
+pruebaTS_exe:
+	@echo Ejecutando pruebaTS
+	@./pruebaTS entrada.txt
+pruebaTS_test:
+	@echo Ejecutando pruebaTS con valgrind
+	@valgrind --trace-children=yes --leak-check=full --track-origins=yes --show-leak-kinds=all ./pruebaTS entrada.txt

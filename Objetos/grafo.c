@@ -1,9 +1,15 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "grafo.h"
+
 
 struct _Grafo {
 	List* raiz;
     List* nodos;
 };
+
 
 
 Grafo* grafo_ini(){

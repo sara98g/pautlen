@@ -1,14 +1,13 @@
 #ifndef GRAFO
 #define GRAFO
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
 
-#include "nodo.h"
-
 typedef struct _Grafo Grafo;
+
+#include "nodo.h"
+#include "tabla_simbolos.h"
+
 
 Grafo* grafo_ini();
 void grafo_free(Grafo* grafo);

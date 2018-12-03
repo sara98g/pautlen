@@ -1,5 +1,8 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "nodo.h"
-#include "tabla_simbolos.h"
 
 
 struct _Nodo {
