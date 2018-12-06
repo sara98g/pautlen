@@ -1,14 +1,5 @@
-#include "nodo.h"
-#include "tabla_simbolos.h"
+#include "estructuras.h"
 
-
-struct _Nodo {
-	char* nombre;
-	tablaSimbolosAmbitos* info;
-    List* padres;
-    List* hijos;
-    List* padres_familia;
-};
 
 bool nodo_calcular_padres_familia(Nodo* nodo);
 
@@ -32,12 +23,7 @@ Nodo* nodo_ini(char* nombre, tablaSimbolosAmbitos* info, List* padres){
         return NULL;
     }
 
-    if(!(nodo->e = nodo_crearElementoTablaSimbolos())){
-        free(nodo->nombre);
-        free(nodo);
-        return NULL;
-    }
-    if (iniciarTablaSimbolosAmbitos(info) == ERROR){
+    if (iniciarTablaSimbolosAmbitos(info) == NULL){
         free(nodo->nombre);
         free(nodo);
         return NULL;
@@ -46,14 +32,14 @@ Nodo* nodo_ini(char* nombre, tablaSimbolosAmbitos* info, List* padres){
     nodo->padres = padres;
     nodo->padres_familia = NULL;
     if(!(nodo->hijos = linkedList_ini(nodo_free, nodo_copiar, nodo_print, nodo_cmp, false))){
-        nodo_free_ElementoTablaSimbolos(nodo->e);
+        destruirTablaSimbolosAmbitos(nodo->info);
         free(nodo->nombre);
         free(nodo);
         return NULL;
     }
 
     if(nodo_calcular_padres_familia(nodo) == false){
-        nodo_free_ElementoTablaSimbolos(nodo->e);
+        destruirTablaSimbolosAmbitos(nodo->info);
         linkedList_free_no_node(nodo->hijos);
         free(nodo->nombre);
         free(nodo);
@@ -84,7 +70,7 @@ Nodo* nodo_ini_cmp(char* nombre){
         free(nodo);
         return NULL;
     }
-    nodo->e = NULL;
+    
     nodo->info = NULL;
     nodo->padres = NULL;
     nodo->padres_familia = NULL;
@@ -117,7 +103,7 @@ void* nodo_copiar(const void* nodo){
     new_nodo->padres = nodo_get_padres((Nodo*)nodo);
     new_nodo->padres_familia = nodo_get_padres_familia((Nodo*)nodo);
     new_nodo->hijos = nodo_get_hijos((Nodo*)nodo);
-    new_nodo->e = nodo_get_ElementoTablaSimbolos((Nodo*)nodo);
+    new_nodo->info = nodo_get_info((Nodo*)nodo);
 
     return (void*)new_nodo;
 }
@@ -139,8 +125,8 @@ void nodo_free(void* nodo){
         linkedList_free_no_node(nodo_get_padres_familia((Nodo*)nodo));
     if(nodo_get_nombre((Nodo*)nodo))
         free(nodo_get_nombre((Nodo*)nodo));
-    if(nodo_get_ElementoTablaSimbolos((Nodo*)nodo))
-        nodo_free_ElementoTablaSimbolos(nodo_get_ElementoTablaSimbolos((Nodo*)nodo));
+    if(nodo_get_info((Nodo*)nodo))
+        destruirTablaSimbolosAmbitos(nodo_get_info((Nodo*)nodo));
     free((Nodo*)nodo);
     return;
 }

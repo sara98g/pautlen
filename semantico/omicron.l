@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "omicron.h"
 #include "y.tab.h"
 
 #define MAX_LONG_ID 50
@@ -115,7 +116,7 @@ printf      {fprintf(salida,";D:\t%s\n",yytext);
 
 {ENTERO}		{fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
-					yylval.atributos.valor = atoi(yytext);
+					yylval.atributos.valor_entero = atoi(yytext);
 					return TOK_CONSTANTE_ENTERA;}
 false       {fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
@@ -131,14 +132,14 @@ true        {fprintf(salida,";D:\t%s\n",yytext);
 		fprintf(salida,";D:\t%s\n",yytext);
 		columna += yyleng;
 		return TOK_ERROR;
-		
+
 	}
 
 	else{
 		fprintf(salida,";D:\t%s\n",yytext);
 		columna += yyleng;
 		/*profe*/
-		strcpy(yyval.atributos.lexema, yytext);
+		strcpy(yylval.atributos.lexema, yytext);
 		return TOK_IDENTIFICADOR;}
 
  }

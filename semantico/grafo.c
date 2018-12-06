@@ -1,9 +1,4 @@
-#include "grafo.h"
-
-struct _Grafo {
-	List* raiz;
-    List* nodos;
-};
+#include "estructuras.h"
 
 
 Grafo* grafo_ini(){

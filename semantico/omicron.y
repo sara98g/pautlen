@@ -4,10 +4,11 @@
   #include <string.h>
   #include "omicron.h"
   #include "generacion.h"
-  #include "tabla_simbolos.h"
+  #include "estructuras.h"
 
   extern int yylex();
   extern int yyleng;
+  extern tablaSimbolosClases* ts_c;
 
   extern FILE* yyin;
   extern FILE* salida;
@@ -23,8 +24,17 @@
 
   %union{
         tipo_atributo atributos;
-
   }
+
+  %token <atributos> TOK_IDENTIFICADOR
+  %token <atributos> TOK_CONSTANTE_ENTERA
+
+  %type <atributos> exp
+  %type <atributos> comparacion
+%type <atributos> constante
+%type <atributos> constante_entera
+%type <atributos> constante_logica
+
 
   %token TOK_NONE
   %token TOK_CLASS
@@ -48,14 +58,12 @@
   %token TOK_WHILE
   %token TOK_SCANF
   %token TOK_PRINTF
-  %token TOK_IDENTIFICADOR
   %token TOK_IGUAL
   %token TOK_DISTINTO
   %token TOK_MENORIGUAL
   %token TOK_MAYORIGUAL
   %token TOK_OR
   %token TOK_AND
-  %token TOK_CONSTANTE_ENTERA
   %token TOK_FALSE
   %token TOK_TRUE
   %token TOK_ERROR
@@ -77,10 +85,7 @@
   %token TOK_CONTAINS
   %token TOK_CONSTANTE_REAL
 
-  %token <atributos> TOK_IDENTIFICADOR
-  %token <atributos> TOK_CONSTANTE_ENTERA
 
-  %type <atributos> exp
 
   %left '+' '-' TOK_OR
   %left '*' '/' TOK_AND
@@ -90,7 +95,7 @@
 
 %%
 
-programa: iniciar_TS TOK_MAIN '{' declaraciones escribir_TS funciones inicio_main sentencias '}' {fprintf(salida,";R:\tprograma: TOK_MAIN '{' declaraciones funciones sentencias '}'\n"); cerrarTS(); escribir_fin(salida);} /*REVISAR CON LA TABLA DE SIMBOLOS*/
+programa: iniciar_TS TOK_MAIN '{' declaraciones escribir_TS funciones inicio_main sentencias '}' {fprintf(salida,";R:\tprograma: TOK_MAIN '{' declaraciones funciones sentencias '}'\n"); escribir_fin(salida);} /*REVISAR CON LA TABLA DE SIMBOLOS*/
         | TOK_MAIN '{' funciones sentencias '}' {fprintf(salida,";R:\tprograma: TOK_MAIN '{' funciones sentencias '}'\n");}
         ;
 
@@ -101,18 +106,18 @@ iniciar_TS: /*vacio*/
         escribir_subseccion_data(salida);
         escribir_cabecera_bss(salida);
 
-        }
+      };
 
 escribir_TS: /*vacio*/
         {
-                escribirTS(); /*con cada simbolo -> declaracion variables*/
+                /*escribirTS(); con cada simbolo -> declaracion variables*/
                 escribir_segmento_codigo(salida); /*La profe pone texto en vez de codigo*/
-        }
+        };
 
 inicio_main: /*vacio*/
         {
                 escribir_inicio_main(salida);
-        }
+        };
 declaraciones: declaracion declaraciones {fprintf(salida,";R:\tdeclaraciones: declaracion declaraciones\n");}
         | declaracion {fprintf(salida,";R:\tdeclaraciones: declaracion\n");}
         ;
@@ -140,14 +145,16 @@ declaracion_clase: modificadores_clase TOK_CLASS identificador TOK_INHERITS iden
         | modificadores_clase TOK_CLASS identificador '{' declaraciones funciones '}' {fprintf(salida,";R:\tdeclaracion_clase: modificadores_clase  TOK_CLASS identificador '{' declaraciones funciones '}'\n");}
         ;
 
-modificadores_clase: /*vacio*/ {fprintf(salida,";R:\tmodificadores_clase:\n");}
+modificadores_clase: /*vacio*/ {
+          fprintf(salida,";R:\tmodificadores_clase:\n");
+        }
         ;
 
-clase_escalar: tipo {fprintf(salida,";R:\tclase_escalar: tipo\n"); clase_actual= ESCALAR}
+clase_escalar: tipo {fprintf(salida,";R:\tclase_escalar: tipo\n"); clase_actual= ESCALAR;}
         ;
 
-tipo: TOK_INT {fprintf(salida,";R:\ttipo: TOK_INT\n"); tipo_actual = ENTERO}
-        | TOK_BOOLEAN {fprintf(salida,";R:\ttipo: TOK_BOOLEAN\n"); tipo_actual = BOOLEAN} /*REVISAR NO SE QUE VALOR ES BOOLEAN*/
+tipo: TOK_INT {fprintf(salida,";R:\ttipo: TOK_INT\n"); tipo_actual = ENTERO;}
+        | TOK_BOOLEAN {fprintf(salida,";R:\ttipo: TOK_BOOLEAN\n"); tipo_actual = BOOLEAN;} /*REVISAR NO SE QUE VALOR ES BOOLEAN*/
         ;
 
 clase_objeto: '{' identificador '}' {fprintf(salida,";R:\tclase_objeto: '{' identificador '}'\n");}
@@ -167,9 +174,51 @@ identificadores:
 funciones: funcion funciones {fprintf(salida,";R:\tfunciones: funcion funciones\n");}
         | /*vacio*/  {fprintf(salida,";R:\tfunciones:\n");}
         ;
+/*CAMBIARLO A " fn_declaration sentencias '}' "*/
+funcion: TOK_FUNCTION modificadores_acceso tipo_retorno identificador '(' parametros_funcion ')' '{' declaraciones_funcion sentencias'}'{
+        fprintf(salida,";R:\tfuncion: TOK_FUNCTION modificadores_acceso tipo_retorno identificador '(' parametro_funcion ')' declaraciones_funcion sentencia\n");}
+        /*Cerrar el ambito*/
 
-funcion: TOK_FUNCTION modificadores_acceso tipo_retorno identificador '(' parametros_funcion ')' '{' declaraciones_funcion sentencias'}'{fprintf(salida,";R:\tfuncion: TOK_FUNCTION modificadores_acceso tipo_retorno identificador '(' parametro_funcion ')' declaraciones_funcion sentencia\n");}
+        /*Leer mazo despues futuros Rodri y Sara
+        comprobar que tenia retorno --> fn_return >0 */
+
+        /*return_o_funcion: TOK_RETURN exp {
+        mov esp, ebp
+        pop ebp
+        ret
+      }
+        */
         ;
+/*
+fn_declaration: fn_complete_name '{' declaraciones_funcion{
+        Actualizar info funcion numVariables en la GLOBAL
+
+        Leer mazo despues futuros Rodri y Sara
+          _nombre_funcion
+          push ebp
+          mov ebp, esp
+          sub esp, 4* n_variables (Reservar espacio variables locales)
+
+}*/
+/*
+fn_complete_name: fn_name '(' parametros_funcion '}'{
+        Crear nombre de la funcion --> nombre funcion @tipo1 @tipo2
+        Abrir AmbitoLocal :
+          1. insertar fn en GLOBAL
+          2. crear Local
+        Recoorer el array_params --> insertarTS (cada param tiene[ nombre,tipo, posicion en el array, ¿Escalar?])
+}*/
+/*
+fn_name: TOK_FUNCTION modificadores_acceso tipo_retorno identificador{
+        num_vars_boolean_actual = 0;
+        pos_var_local_actual = 1;
+        num_params_actuales = 0;
+        pos_params_actual = 0:
+        $$.lexema = $4.lexema; (identificador)
+        $$.tipo= tipo_actual
+
+
+}*/
 
 tipo_retorno: TOK_NONE {fprintf(salida,";R:\ttipo_retorno: TOK_NONE\n");}
         | tipo {fprintf(salida,";R:\tipo_retorno: tipo\n");}
@@ -263,7 +312,12 @@ exp:    exp '+' exp {fprintf(salida,";R:\texp: exp '+' exp \n");}
         | exp TOK_AND exp  {fprintf(salida,";R:\texp: exp TOK_AND exp  \n");}
         | exp TOK_OR exp  {fprintf(salida,";R:\texp: exp TOK_OR exp \n");}
         | '!' exp {fprintf(salida,";R:\texp:'!' exp\n");}
-        | identificador  {fprintf(salida,";R:\texp: identificador \n");}
+        | identificador /* cambiar "identificador" por "idf_llamada_funcion"*/ {
+          fprintf(salida,";R:\texp: identificador \n");
+          /*en_exp_list = 0
+            Comprobar nombre funcion
+            BuscarTS */
+        }
         | constante  {
                 fprintf(salida,";R:\texp: constante \n");
                 //$$.tipo = $1.tipo
@@ -276,6 +330,14 @@ exp:    exp '+' exp {fprintf(salida,";R:\texp: exp '+' exp \n");}
         | identificador_clase identificador '(' lista_expresiones ')' {fprintf(salida,";R:\texp: identificador_clase identificador '(' lista_expresiones ')' \n");}
         | identificador_clase identificador  {fprintf(salida,";R:\texp: identificador_clase identificador \n");}
         ;
+
+/*idf_llamada_funcion: TOK_IDENTIFICADOR{
+         ¿en_exp_list == 1  ? --> ERR_SEMANTICO
+         $$.lexema = $1.lexema
+           num_params_actual = 0
+           en_exp_list = 1
+
+}*/
 
 identificador_clase: identificador {fprintf(salida,";R:\tidentificador_clase: identificador \n");}
         | TOK_ITSELF {fprintf(salida,";R:\tidentificador_clase: TOK_ITSELF \n");}
@@ -298,12 +360,12 @@ comparacion: exp TOK_IGUAL exp {fprintf(salida,";R:\tcomparacion: exp TOK_IGUAL 
         ;
 
 constante: constante_logica {fprintf(salida,";R:\tconstante: constante_logica\n");
-                $$.tipo = $1.tipo
-                $$.es_direccion = $1.es_direccion
+                $$.tipo = $1.tipo;
+                $$.es_direccion = $1.es_direccion;
         }
         | constante_entera  {fprintf(salida,";R:\tconstante: constante_entera\n");
-                $$.tipo = $1.tipo
-                $$.es_direccion = $1.es_direccion
+                $$.tipo = $1.tipo;
+                $$.es_direccion = $1.es_direccion;
         }
         ;
 constante_logica: TOK_TRUE {fprintf(salida,";R:\tconstante_logica: TOK_TRUE\n");
@@ -318,16 +380,16 @@ constante_logica: TOK_TRUE {fprintf(salida,";R:\tconstante_logica: TOK_TRUE\n");
         ;
 constante_entera: TOK_CONSTANTE_ENTERA {
                 fprintf(salida,";R:\tconstante_entera: TOK_CONSTANTE_ENTERA\n");
-                $$.tipo = INT
-                $$.es_direccion = 0
+                $$.tipo = INT;
+                $$.es_direccion = 0;
                 //escribir_operando($1.valor_entero....)
         }
         ;
 
 
 identificador: TOK_IDENTIFICADOR
-        {
-                fprintf(salida. ";R:\tidentificador: TOK_IDENTIFICADOR");
+        {/*
+                fprintf(salida, ";R:\tidentificador: TOK_IDENTIFICADOR");
                 elementoTablaSimbolos * e = NULL;
                 char* ambito;
                 e = nodo_set_ElementoTablaSimbolos(e,
@@ -361,7 +423,7 @@ identificador: TOK_IDENTIFICADOR
                 													NULL);
                 if(buscarTablaSimbolosClasesAmbitoActual(ts_c, idclase, $1.lexema, e, ambito) == ERROR){
                   fprintf(salida,"Error al insertar en la TS, elemento ya insertado\n");
-                  exit(Error);
+                  exit(-1);
                 }
 
 
@@ -398,7 +460,7 @@ identificador: TOK_IDENTIFICADOR
                                             0,
                                             NULL) == ERROR){
                         fprintf(salida, "Error al insertart\n");
-                        exit(Error);
+                        exit(-1);
                       }
                   }
                   else{
@@ -406,8 +468,12 @@ identificador: TOK_IDENTIFICADOR
                     exit(Error);
                   }
 
-                }
+                }*/
         }
+        /* idf
+         guardar[posParam] --> nombreParam = $1.lexema, tipo_Actual*/
+        /* pos_actual parsActual++
+           num_pars_actual++ */
         ;
 
 

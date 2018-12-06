@@ -1,0 +1,15 @@
+;D:	main
+;D:	{
+;D:	int
+;R:	funciones:
+
+; ---Funcion fin---
+	jmp near fin
+	fin_error_division:
+		push dword ErrorDiv0
+		call print_string
+		add esp, 4
+		call print_endofline
+	fin:
+		mov dword esp, [__esp]
+		ret

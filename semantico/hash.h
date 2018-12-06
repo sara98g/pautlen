@@ -1,22 +1,55 @@
 #ifndef HASH
 #define HASH
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+#include "list.h"
+
+typedef struct _elementoTablaSimbolos elementoTablaSimbolos;
 
 
-#define TAM_L 100
 /**************** CONSTANTES ****************/
-#define OK 1
-#define ERROR 0
 #define HASH_INI 5381
 #define HASH_FACTOR 33
+#define TAM_L 100
+#define MAX_TAB 64 /*tamanio de la tabla entre 1 y 64*/
+
+
+/***************************************************************************/
+/*Enumerados utiles para la clasificacion de la informacion de los simbolos*/
+/***************************************************************************/
+
+typedef enum {
+    OK = 0, ERROR = -1
+} STATUS;
+
+typedef enum {
+	VARIABLE = 1, PARAMETRO = 2, FUNCION = 3, CLASE = 4, METODO_SOBREESCRIBIBLE = 5, METODO_NO_SOBREESCRIBIBLE = 6, ATRIBUTO_CLASE = 7, ATRIBUTO_INSTANCIA = 8
+} CATEGORIA;
+
+typedef enum {
+	BOOLEAN = 1, INT = 2
+} TIPO;
+
+typedef enum {
+	ESCALAR = 1, VECTOR = 2
+} TIPO_CLASE;
+
+typedef enum {
+    CERRADO = -1, GLOBAL = 0, LOCAL = 1
+} AMBITO;
+
+typedef enum {
+    NINGUNO = 0, ACCESO_CLASE = 1, ACCESO_HERENCIA = 2, ACCESO_TODOS = 3
+} TIPO_ACCESO;
+
+typedef enum {
+    MIEMBRO_UNICO = 0, MIEMBRO_NO_UNICO = 1
+} TIPO_MIEMBRO;
+
 
 /**************** DECLARACIONES DE TIPOS ****************/
 
-typedef struct _elementoTablaSimbolos {
-    char clave[TAM_L]; /*clave de acceso a la tabla*/
+struct _elementoTablaSimbolos {
+    char *clave; /*clave de acceso a la tabla*/
     int categoria; /*variable, parametro de funcion, funcion, clase*/
     int tipo; /*boolean o int*/
     int clase; /*escalar o vector*/
@@ -44,24 +77,26 @@ typedef struct _elementoTablaSimbolos {
   	int num_acumulado_metodos_sobreescritura;
   	int * tipo_args;
 
-} elementoTablaSimbolos; /*info de los nodos hash*/
+}; /*info de los nodos hash*/
 
 typedef struct NodoHash {
 	elementoTablaSimbolos *info;
-	char *clave;        //Identificador del nodo.
-	struct NodoHash *siguiente;//NULL en caso de que no exista un nodo en colision. El siguiente en caso contrario.
+	char *clave;        /*Identificador del nodo.*/
+	struct NodoHash *siguiente; /*NULL en caso de que no exista un nodo en colision. El siguiente en caso contrario.*/
 } NodoHash;
 
 typedef struct TablaHash {
-	int tam;    	//Tamaño de la tabla hash.
-	NodoHash **tabla; //Array de punteros a los primeros elementos de la tabla hash.
+	int tam;    	/*Tamaño de la tabla hash.*/
+	char **lista;
+        int nElem;
+	NodoHash **tabla; /*Array de punteros a los primeros elementos de la tabla hash.*/
 } TablaHash;
 
 /**************** FUNCIONES ****************/
 elementoTablaSimbolos * nodo_crearElementoTablaSimbolos();
 int nodo_free_ElementoTablaSimbolos(elementoTablaSimbolos * e);
 elementoTablaSimbolos * nodo_get_ElementoTablaSimbolos(NodoHash *n);
-elementoTablaSimbolos * nodo_set_ElementoTablaSimbolos(elementoTablaSimbolos *e,
+elementoTablaSimbolos * nodo_set_ElementoTablaSimbolos(elementoTablaSimbolos *e, 
 													char* id,
 													int clase,
 													int categoria,
@@ -90,27 +125,27 @@ elementoTablaSimbolos * nodo_set_ElementoTablaSimbolos(elementoTablaSimbolos *e,
 								        			int posicion_acumulada_atributos_instancia,
 								        			int posicion_acumulada_metodos_sobreescritura,
 													int * tipo_args);
-//Recibe un tamaño y crea una tabla de dicha longitud.
+/*Recibe un tamaño y crea una tabla de dicha longitud.*/
 TablaHash* crearTablaHash(int tam);
 
-//Elimina la tabla Hash.
-//Devuelve OK en caso de que se borre correctamente y ERROR en caso de que no.
+/*Elimina la tabla Hash.
+Devuelve OK en caso de que se borre correctamente y ERROR en caso de que no.*/
 int eliminarTablaHash(TablaHash *th);
 
-//Recibe el identificador de un nodo y devuelve su indice para la tabla hash.
-//Funcion auxiliar, se llama dentro de la funcion insertarNodoHash.
+/*Recibe el identificador de un nodo y devuelve su indice para la tabla hash.
+Funcion auxiliar, se llama dentro de la funcion insertarNodoHash.*/
 int funcionHash(char *clave);
 
-//Recibe la clave y la informacion, y devuelve un nuevo NodoHash. Reservara memoria y rellenara la estructura de NodoHash.
-//Funcion auxiliar, se llama dentro de la funcion insertarNodoHash.
+/*Recibe la clave y la informacion, y devuelve un nuevo NodoHash. Reservara memoria y rellenara la estructura de NodoHash.
+Funcion auxiliar, se llama dentro de la funcion insertarNodoHash.*/
 NodoHash* crearNodoHash(char *clave, elementoTablaSimbolos *info);
-
-//Inserta en la tabla hash un nodo en un indice calculado por funcionHash.
-//Utilizara la funcionHash para saber donde insertar el nuevo elemento y debera crear dentro el nuevo nodo (crearNodoHash).
-//Devuelve OK en caso de que se inserte y ERROR en caso de que no.
+void destruirNodoHash(NodoHash *nh);
+/*Inserta en la tabla hash un nodo en un indice calculado por funcionHash.
+Utilizara la funcionHash para saber donde insertar el nuevo elemento y debera crear dentro el nuevo nodo (crearNodoHash).
+Devuelve OK en caso de que se inserte y ERROR en caso de que no.*/
 int insertarNodoHash(TablaHash *th, char *clave, elementoTablaSimbolos *info);
 
-//Busca en la tabla hash el nodo identificado por su clave y lo devuelve. NULL en caso contrario.
+/*Busca en la tabla hash el nodo identificado por su clave y lo devuelve. NULL en caso contrario.*/
 NodoHash* buscarNodoHash(TablaHash *th, char *clave);
 
 #endif

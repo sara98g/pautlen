@@ -1,7 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "list.h"
 
 typedef struct _NodeList{
@@ -34,8 +30,8 @@ NodeList * nodelinkedList_ini();
 List* linkedList_ini(destroy_elementlist_function_type f1, copy_elementlist_function_type f2, print_elementlist_function_type f3, cmp_elementlist_function_type f4, bool copy){
     List* l = NULL;
     
-    if (!f1 || !f2 || !f3 || !f4)
-        return NULL;
+    //if (!f1 || !f2 || !f3 || !f4)
+    //    return NULL;
     
     l = (List*)malloc(sizeof(List));
     if (!l)

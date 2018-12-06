@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "omicron.h"
+#include "generacion.h"
+#include "estructuras.h"
 
 extern int yyparse();
 extern void yyerror(char *e);
@@ -8,6 +11,7 @@ extern void yyerror(char *e);
 extern FILE *yyin;
 extern FILE *salida;
 char idclase[] = "ClasePrincipal";
+tablaSimbolosClases* ts_c;
 
 int main(int argc, char** argv)
 {
@@ -28,14 +32,14 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    tablaSimbolosClases* ts_c;
-    if(iniciarTablaSimbolosClases(ts_c, "main") == ERROR){
+    ts_c = iniciarTablaSimbolosClases("main");
+    if( ts_c == NULL){
         printf("Error creando el grafo\n");
-        exit(Error);
+        exit(-1);
     }
     if(abrirClase(ts_c, idclase) == ERROR){
       printf("Error abriendo tabla de simbolos\n");
-      exit(Error);
+      exit(-1);
     }
      do
     {
@@ -44,11 +48,11 @@ int main(int argc, char** argv)
 
     if(cerrarClase(ts_c, idclase, 0, 0, 0,0) == ERROR){
       printf("Error cerrando tabla simbolos\n");
-      exit(Error);
+      exit(-1);
     }
-    if(cerrarTablaSimbolosClases(tablaSimbolosClases* t) == ERROR){
+    if(cerrarTablaSimbolosClases(ts_c) == ERROR){
       printf("Error cerrando grafo\n");
-      exit(Error);
+      exit(-1);
     }
 
     fclose(yyin);
