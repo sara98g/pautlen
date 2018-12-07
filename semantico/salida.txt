@@ -1,4 +1,0 @@
-;D:	main
-;D:	{
-;D:	int
-;R:	funciones:

@@ -98,14 +98,14 @@
 
 %%
 
-programa: iniciar_codigo TOK_MAIN '{' declaraciones escribir_variables funciones inicio_main sentencias '}' escribir_fin {fprintf(salida,";R:\tprograma: TOK_MAIN '{' declaraciones funciones sentencias '}'\n"); escribir_fin(salida);} /*REVISAR CON LA TABLA DE SIMBOLOS*/
+programa:  TOK_MAIN '{' declaraciones iniciar_codigo escribir_variables funciones inicio_main sentencias '}' escribir_fin {fprintf(salida,";R:\tprograma: TOK_MAIN '{' declaraciones funciones sentencias '}'\n"); escribir_fin(salida);} /*REVISAR CON LA TABLA DE SIMBOLOS*/
         | TOK_MAIN '{' funciones sentencias '}' {fprintf(salida,";R:\tprograma: TOK_MAIN '{' funciones sentencias '}'\n");}
         ;
 
 /*REVISAR CON LA TABLA DE SIMBOLOS*/
 iniciar_codigo: /*vacio*/
         {
-
+        fprintf(stdout,"deberia escribir subsecciondata y bss\n");
         escribir_subseccion_data(salida);
         escribir_cabecera_bss(salida);
 
@@ -160,8 +160,8 @@ modificadores_clase: /*vacio*/ {
 clase_escalar: tipo {fprintf(salida,";R:\tclase_escalar: tipo\n"); clase_actual= ESCALAR;}
         ;
 
-tipo: TOK_INT {fprintf(salida,";R:\ttipo: TOK_INT\n"); tipo_actual = ENTERO;}
-        | TOK_BOOLEAN {fprintf(salida,";R:\ttipo: TOK_BOOLEAN\n"); tipo_actual = BOOLEAN;} /*REVISAR NO SE QUE VALOR ES BOOLEAN*/
+tipo: TOK_INT {fprintf(salida,";R:\ttipo: TOK_INT\n"); /*tipo_actual = ENTERO;*/}
+        | TOK_BOOLEAN {fprintf(salida,";R:\ttipo: TOK_BOOLEAN\n"); /*tipo_actual = BOOLEAN;*/} /*REVISAR NO SE QUE VALOR ES BOOLEAN*/
         ;
 
 clase_objeto: '{' TOK_IDENTIFICADOR '}' {fprintf(salida,";R:\tclase_objeto: '{' TOK_IDENTIFICADOR '}'\n");}
@@ -279,6 +279,7 @@ asignacion: TOK_IDENTIFICADOR '=' exp {
                 //Buscar_TS --> e
                 //if e.tipo == $3.tipo
                 asignar(salida, $1.lexema, $3.tipo);
+                fprintf(stdout, "TIPO; %d\n",$3.tipo );
 }
         | elemento_vector '=' exp {fprintf(salida,";R:\tasignacion: elemento_vector '=' exp\n");}
         | elemento_vector '=' TOK_INSTANCE_OF TOK_IDENTIFICADOR '(' lista_expresiones ')' {fprintf(salida,";R:\tasignacion: TOK_IDENTIFICADOR '=' TOK_INSTANCE_OF TOK_IDENTIFICADOR '(' lista_expresiones ')'\n");}
@@ -407,8 +408,9 @@ constante_logica: TOK_TRUE {fprintf(salida,";R:\tconstante_logica: TOK_TRUE\n");
         ;
 constante_entera: TOK_CONSTANTE_ENTERA {
                 fprintf(salida,";R:\tconstante_entera: TOK_CONSTANTE_ENTERA\n");
-                $$.tipo = INT;
+                $$.tipo = ENTERO;
                 $$.es_direccion = 0;
+                fprintf(stdout, "%s valor\n", $1.lexema);
                 escribir_operando(salida, $1.lexema, 0);
         }
         ;
@@ -510,9 +512,9 @@ identificador: TOK_IDENTIFICADOR
 
 
 void yyerror(char * s)
-{/*
+{
   if(yychar != TOK_ERROR)
     printf("ERROR SINTACTICO: %d:%d\n",line, columna-yyleng);
-    escribir_fin(salida); O en el .c (CREO)*/
+    escribir_fin(salida);
 
 }
