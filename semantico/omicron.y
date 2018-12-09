@@ -105,7 +105,6 @@ programa:  TOK_MAIN '{' declaraciones iniciar_codigo escribir_variables funcione
 /*REVISAR CON LA TABLA DE SIMBOLOS*/
 iniciar_codigo: /*vacio*/
         {
-        fprintf(stdout,"deberia escribir subsecciondata y bss\n");
         escribir_subseccion_data(salida);
         escribir_cabecera_bss(salida);
 
@@ -279,7 +278,6 @@ asignacion: TOK_IDENTIFICADOR '=' exp {
                 //Buscar_TS --> e
                 //if e.tipo == $3.tipo
                 asignar(salida, $1.lexema, $3.tipo);
-                fprintf(stdout, "TIPO; %d\n",$3.tipo );
 }
         | elemento_vector '=' exp {fprintf(salida,";R:\tasignacion: elemento_vector '=' exp\n");}
         | elemento_vector '=' TOK_INSTANCE_OF TOK_IDENTIFICADOR '(' lista_expresiones ')' {fprintf(salida,";R:\tasignacion: TOK_IDENTIFICADOR '=' TOK_INSTANCE_OF TOK_IDENTIFICADOR '(' lista_expresiones ')'\n");}
@@ -410,7 +408,6 @@ constante_entera: TOK_CONSTANTE_ENTERA {
                 fprintf(salida,";R:\tconstante_entera: TOK_CONSTANTE_ENTERA\n");
                 $$.tipo = ENTERO;
                 $$.es_direccion = 0;
-                fprintf(stdout, "%s valor\n", $1.lexema);
                 escribir_operando(salida, $1.lexema, 0);
         }
         ;

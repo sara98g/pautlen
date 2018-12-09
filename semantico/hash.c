@@ -172,13 +172,15 @@ int eliminarTablaHash(TablaHash *th) {
             }
             free(th->tabla);
             for(x=0; x<100; x++){
-
+								if(th->lista[x] != NULL){
                     free(th->lista[x]);
+								}
 
             }
 						free(th->lista);
 
         }
+				free(n2);
         free(th);
     }
 

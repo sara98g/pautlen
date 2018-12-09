@@ -1,44 +1,33 @@
 CC = gcc
-CFLAGS = -c -Wall -g -O0
+CFLAGS = -g -Wall
 
-OBJECTS = pruebaSintactico.o y.tab.o  tabla_simbolos.o nodo.o grafo.o hash.o list.o
 
 .PHONY: all clean
 
-all: pruebaSintactico
+all: bis lex pruebaSemantico ejecuta prueba.o prueba
 
-pruebaSintactico:  $(OBJECTS)
-	$(CC) -o pruebaSintactico $(OBJECTS)
+parte1: bis lex pruebaSemantico ejecuta
 
-pruebaSintactico.o: pruebaSintactico.c tabla_simbolos.h generacion.h functions.h estructuras.h omicron.h
-	$(CC) $(CFLAGS) pruebaSintactico.c
+parte2: prueba.o prueba
 
-list.o: list.c list.h
-	$(CC) $(CFLAGS)  list.c
+bis:
+	bison -dyv omicron.y
 
-hash.o: hash.c hash.h
-	$(CC) $(CFLAGS) hash.c
-
-nodo.o: nodo.c estructuras.h
-	$(CC) $(CFLAGS)  nodo.c
-
-grafo.o: grafo.c estructuras.h
-	$(CC) $(CFLAGS)  grafo.c
-
-tabla_simbolos.o: tabla_simbolos.c estructuras.h
-	$(CC) $(CFLAGS) tabla_simbolos.c
-
-lex.yy.o: lex.yy.c y.tab.h
-	$(CC) $(CFLAGS) lex.yy.c
-
-lex.yy.c: omicron.l
+lex:
 	flex omicron.l
 
-y.tab.o: y.tab.c
-	$(CC) $(CFLAGS) y.tab.c
+pruebaSemantico:
+	$(CC) $(CFLAGS) -o pruebaSemantico *.c
 
-y.tab.c: omicron.y
-	bison -d -y -v omicron.y
+ejecuta:
+		./pruebaSemantico entrada.txt misalida.asm
+
+prueba.o:
+	nasm -g -o prueba.o -f elf misalida.asm
+
+prueba: 
+	gcc -m32 -o prueba prueba.o olib.o
+
 
 clean:
-	rm -f *.o pruebaSintactico lex.yy.c misalida*.txt y.*
+	rm -f prueba.o pruebaSemantico lex.yy.c *.asm y.*
