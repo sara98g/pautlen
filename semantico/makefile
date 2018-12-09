@@ -23,9 +23,9 @@ ejecuta:
 		./pruebaSemantico entrada.txt misalida.asm
 
 prueba.o:
-	nasm -g -o prueba.o -f elf misalida.asm
+	nasm -g -o prueba.o -f elf32 misalida.asm
 
-prueba: 
+prueba:
 	gcc -m32 -o prueba prueba.o olib.o
 
 

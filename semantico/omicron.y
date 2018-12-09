@@ -311,15 +311,75 @@ escritura: TOK_PRINTF exp  {
 retorno_funcion: TOK_RETURN exp {fprintf(salida,";R:\tretorno_funcion: TOK_RETURN exp\n");}
         | TOK_RETURN TOK_NONE {fprintf(salida,";R:\tretorno_funcion: TOK_RETURN TOK_NONE\n");}
         ;
-//los cuatro primros ver que son int
-exp:    exp '+' exp {fprintf(salida,";R:\texp: exp '+' exp \n");}
-        | exp '-' exp {fprintf(salida,";R:\texp: exp '-' exp \n");}
-        | exp '/' exp {fprintf(salida,";R:\texp: exp '/' exp \n");}
-        | exp '*' exp  {fprintf(salida,";R:\texp: exp '*' exp \n");}
+exp:    exp '+' exp {
+              fprintf(salida,";R:\texp: exp '+' exp \n");
+              if($1.tipo != ENTERO || $3.tipo!= ENTERO ){
+                fprintf(stdout, "ERROR, no se pueden sumar cosas diferentes a enteros\n" );
+                exit(-1);
+              }
+              fprintf(stdout, "entra en la funcion de sumar\n");
+              //con la tabla de simbolos habria que ver si es variable o no, de momento generalazmaos a siempre variable
+
+              sumar(salida,1,1);
+              $$.tipo = $1.tipo;
+            }
+        | exp '-' exp {
+              fprintf(salida,";R:\texp: exp '-' exp \n");
+              if($1.tipo != ENTERO || $3.tipo!= ENTERO ){
+                fprintf(stdout, "ERROR, no se pueden restar cosas diferentes a enteros\n" );
+                exit(-1);
+              }
+              //con la tabla de simbolos habria que ver si es variable o no, de momento generalazmaos a siempre variable
+
+              restar(salida,1,1);
+              $$.tipo = $1.tipo;
+            }
+        | exp '/' exp {
+              fprintf(salida,";R:\texp: exp '/' exp \n");
+              if($1.tipo != ENTERO || $3.tipo!= ENTERO ){
+                fprintf(stdout, "ERROR, no se pueden dividir cosas diferentes a enteros\n" );
+                exit(-1);
+              }
+              //con la tabla de simbolos habria que ver si es variable o no, de momento generalazmaos a siempre variable
+
+              dividir(salida,1,1);
+              $$.tipo = $1.tipo;
+            }
+        | exp '*' exp  {
+              fprintf(salida,";R:\texp: exp '*' exp \n");
+              if($1.tipo != ENTERO || $3.tipo!= ENTERO ){
+                fprintf(stdout, "ERROR, no se pueden multiplicar cosas diferentes a enteros\n" );
+                exit(-1);
+              }
+              //con la tabla de simbolos habria que ver si es variable o no, de momento generalazmaos a siempre variable
+
+              multiplicar(salida,1,1);
+              $$.tipo = $1.tipo;
+            }
+        //no tengo claro si - o ! es la funcion no, creo que ! es no y - es cambiar_signo
         | '-' exp %prec NEG  {fprintf(salida,";R:\texp: '-' exp \n");}
-        //estas tres ver tipo booleano
-        | exp TOK_AND exp  {fprintf(salida,";R:\texp: exp TOK_AND exp  \n");}
-        | exp TOK_OR exp  {fprintf(salida,";R:\texp: exp TOK_OR exp \n");}
+
+        | exp TOK_AND exp  {
+              fprintf(salida,";R:\texp: exp TOK_AND exp  \n");
+              if($1.tipo != BOOLEAN || $3.tipo!= BOOLEAN ){
+                fprintf(stdout, "ERROR, no se puede hacer AND entre cosas diferentes a booleanos\n" );
+                exit(-1);
+              }
+              //con la tabla de simbolos habria que ver si es variable o no, de momento generalazmaos a siempre variable
+
+              y(salida,1,1);
+              $$.tipo = $1.tipo;
+            }
+        | exp TOK_OR exp  {
+              fprintf(salida,";R:\texp: exp TOK_OR exp \n");
+              if($1.tipo != BOOLEAN || $3.tipo!= BOOLEAN ){
+                fprintf(stdout, "ERROR, no se puede hacer OR entre cosas diferentes a booleanos\n" );
+                exit(-1);
+              }
+              //con la tabla de simbolos habria que ver si es variable o no, de momento generalazmaos a siempre variable
+
+              o(salida,1,1);
+              $$.tipo = $1.tipo;}
         | '!' exp {fprintf(salida,";R:\texp:'!' exp\n");}
         | TOK_IDENTIFICADOR/* cambiar "identificador" por "idf_llamada_funcion"*/ {
           fprintf(salida,";R:\texp: TOK_IDENTIFICADOR\n");
@@ -391,13 +451,15 @@ constante: constante_logica {fprintf(salida,";R:\tconstante: constante_logica\n"
         }
         ;
 constante_logica: TOK_TRUE {fprintf(salida,";R:\tconstante_logica: TOK_TRUE\n");
-                    escribir_operando(salida, '1', 0);
+                    char valor[]={"1"};
+                    escribir_operando(salida, valor, 0);
                     $$.tipo = BOOLEAN;
                     $$.es_direccion = 0;
                     $$.valor_entero = 1;
         }
         | TOK_FALSE {fprintf(salida,";R:\tconstante_logica: TOK_FALSE\n");
-                    escribir_operando(salida, '0', 0);
+                    char valor[]={"0"};
+                    escribir_operando(salida, valor, 0);
                     $$.tipo = BOOLEAN;
                     $$.es_direccion = 0;
                     $$.valor_entero = 0;
@@ -408,7 +470,9 @@ constante_entera: TOK_CONSTANTE_ENTERA {
                 fprintf(salida,";R:\tconstante_entera: TOK_CONSTANTE_ENTERA\n");
                 $$.tipo = ENTERO;
                 $$.es_direccion = 0;
-                escribir_operando(salida, $1.lexema, 0);
+                char valor[20];
+                sprintf(valor, "%d", $1.valor_entero);
+                escribir_operando(salida, valor, 0);
         }
         ;
 
