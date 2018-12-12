@@ -166,7 +166,12 @@ tipo: TOK_INT {fprintf(salida,";R:\ttipo: TOK_INT\n"); /*tipo_actual = ENTERO;*/
 clase_objeto: '{' TOK_IDENTIFICADOR '}' {fprintf(salida,";R:\tclase_objeto: '{' TOK_IDENTIFICADOR '}'\n");}
         ;
 
-clase_vector: TOK_ARRAY tipo '[' constante_entera ']' {fprintf(salida,";R:\tclase_vector: TOK_ARRAY tipo '[' constante_entera ']'\n");}
+clase_vector: TOK_ARRAY tipo '[' constante_entera ']' {
+              fprintf(salida,";R:\tclase_vector: TOK_ARRAY tipo '[' constante_entera ']'\n");
+              /*tamanio_vector_actual = $4.valor_entero
+              if ((tamanio_actual <1) || (tamanio_vector_actual > 64))
+              */
+            }
         | TOK_ARRAY tipo '[' constante_entera ',' constante_entera ']' {fprintf(salida,";R:\tclase_vector: TOK_ARRAY tipo '[' constante_entera ',' constante_entera ']'\n");}
         ;
 //AQUI SI ES identificador NO TOK
@@ -277,7 +282,9 @@ asignacion: TOK_IDENTIFICADOR '=' exp {
                 // buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, ,e, GLOBAL)
                 //Buscar_TS --> e
                 //if e.tipo == $3.tipo
-                asignar(salida, $1.lexema, $3.tipo);
+                $1.tipo=$3.tipo;
+                //hay que ver si es variable o no
+                asignar(salida, $1.lexema, 0);
 }
         | elemento_vector '=' exp {fprintf(salida,";R:\tasignacion: elemento_vector '=' exp\n");}
         | elemento_vector '=' TOK_INSTANCE_OF TOK_IDENTIFICADOR '(' lista_expresiones ')' {fprintf(salida,";R:\tasignacion: TOK_IDENTIFICADOR '=' TOK_INSTANCE_OF TOK_IDENTIFICADOR '(' lista_expresiones ')'\n");}
@@ -285,16 +292,37 @@ asignacion: TOK_IDENTIFICADOR '=' exp {
         | identificador_clase '.' TOK_IDENTIFICADOR '=' exp {fprintf(salida,";R:\tasignacion: identificador_clase '.' TOK_IDENTIFICADOR '=' exp \n");}
         ;
 
-elemento_vector: TOK_IDENTIFICADOR '[' exp ']' {fprintf(salida,";R:\telemento_vector: TOK_IDENTIFICADOR '[' exp ']'\n");}
+elemento_vector: TOK_IDENTIFICADOR '[' exp ']' {
+                fprintf(salida,";R:\telemento_vector: TOK_IDENTIFICADOR '[' exp ']'\n");
+              }
         ;
 
-condicional: TOK_IF '(' exp ')' '{' sentencias '}' {fprintf(salida,";R:\tcondicional: TOK_IF '(' exp ')' '{' sentencias '}' \n");}
-        | TOK_IF '(' exp ')' '{' sentencias '}' TOK_ELSE '{' sentencias '}'{fprintf(salida,";R:\tcondicional: TOK_IF '(' exp ')' '{' sentencias '}' TOK_ELSE '{' sentencias '}' \n");}
+condicional: if_exp ')' '{' sentencias '}' {fprintf(salida,";R:\tcondicional: TOK_IF '(' exp ')' '{' sentencias '}' \n");}
+        |    if_exp ')' '{' sentencias '}' TOK_ELSE '{' sentencias '}'{fprintf(salida,";R:\tcondicional: TOK_IF '(' exp ')' '{' sentencias '}' TOK_ELSE '{' sentencias '}' \n");}
         ;
 
+if_exp : TOK_IF '(' exp {
+    if($3.tipo != BOOLEAN){
+      fprintf(stdout, "ERROR, IF_ELSE distinto de booleano\n" );
+    }
+};
 
-bucle: TOK_WHILE exp '{' sentencias '}'{fprintf(salida,";R:\tbucle: TOK_WHILE exp '{' sentencias '}' \n");}
-        ;
+bucle: while_exp sentencias '}'{
+      fprintf(salida,";R:\tbucle: TOK_WHILE exp '{' sentencias '}' \n");
+    }
+    ;
+
+while_exp: while exp ')' '{'{
+      if($2.tipo != BOOLEAN){
+        fprintf(stdout, "ERROR, WHILE distinto de booleano\n" );
+      }
+
+      $$.etiqueta = $1.etiqueta;
+};
+
+while: TOK_WHILE '('{
+    $$.etiqueta = etiqueta_global++;
+};
 
 lectura: TOK_SCANF TOK_IDENTIFICADOR {fprintf(salida,";R:\tlectura: TOK_SCANF TOK_IDENTIFICADOR  \n");
         leer(salida, $2.lexema, ENTERO);
@@ -361,6 +389,10 @@ exp:    exp '+' exp {
 
         | exp TOK_AND exp  {
               fprintf(salida,";R:\texp: exp TOK_AND exp  \n");
+              //esto es provisional
+              $1.tipo=1;
+              $3.tipo=1;
+
               if($1.tipo != BOOLEAN || $3.tipo!= BOOLEAN ){
                 fprintf(stdout, "ERROR, no se puede hacer AND entre cosas diferentes a booleanos\n" );
                 exit(-1);
@@ -372,6 +404,10 @@ exp:    exp '+' exp {
             }
         | exp TOK_OR exp  {
               fprintf(salida,";R:\texp: exp TOK_OR exp \n");
+              //esto es provisional
+              $1.tipo=1;
+              $3.tipo=1;
+
               if($1.tipo != BOOLEAN || $3.tipo!= BOOLEAN ){
                 fprintf(stdout, "ERROR, no se puede hacer OR entre cosas diferentes a booleanos\n" );
                 exit(-1);
@@ -380,12 +416,25 @@ exp:    exp '+' exp {
 
               o(salida,1,1);
               $$.tipo = $1.tipo;}
-        | '!' exp {fprintf(salida,";R:\texp:'!' exp\n");}
+        | '!' exp {
+              fprintf(salida,";R:\texp:'!' exp\n");
+              //esto e sprovisoinal
+              $2.tipo=1;
+
+              if($2.tipo != BOOLEAN){
+                fprintf(stdout, "ERROR, no se puede hacer NO en cosas diferentes a booleanos\n" );
+                exit(-1);
+              }
+              //con la tabla de simbolos habria que ver si es variable o no, de momento generalazmaos a siempre variable
+
+              no(salida,1,etiqueta_global++);
+
+              }
         | TOK_IDENTIFICADOR/* cambiar "identificador" por "idf_llamada_funcion"*/ {
           fprintf(salida,";R:\texp: TOK_IDENTIFICADOR\n");
           escribir_operando(salida, $1.lexema, 1);
           $$.es_direccion = 1;
-          //tipo aun no lo se
+        //tipo aun no lo se
           /*en_exp_list = 0
             Comprobar nombre funcion
             BuscarTS */
@@ -423,22 +472,95 @@ resto_lista_expresiones: ',' exp resto_lista_expresiones {fprintf(salida,";R:\tl
         | /*vacio*/{fprintf(salida,";R:\tresto_lista_expresiones:\n");}
         ;
 
-comparacion: exp TOK_IGUAL exp {fprintf(salida,";R:\tcomparacion: exp TOK_IGUAL exp \n");
+comparacion: exp TOK_IGUAL exp {
+              fprintf(salida,";R:\tcomparacion: exp TOK_IGUAL exp \n");
               if($1.tipo == $3.tipo){
-                igual(salida, $1.es_direccion, $3.es_direccion, etiqueta_global++);
+                //con la ts hay qu ver si son variables
+                igual(salida, 1, 1, etiqueta_global++);
                 $$.tipo = BOOLEAN;
               }
               else{
-                /*imprimo error*/
+                fprintf(stdout, "ERROR, no se puede hacer == entre cosas diferentes\n" );
                 exit(-1);
               }
         }
-        | exp TOK_DISTINTO exp {fprintf(salida,";R:\tcomparacion: exp TOK_DISTINTO exp \n");}
+        | exp TOK_DISTINTO exp {
+              fprintf(salida,";R:\tcomparacion: exp TOK_DISTINTO exp \n");
+              if($1.tipo == $3.tipo){
+                //con la ts hay qu ver si son variables
+                distinto(salida, 1, 1, etiqueta_global++);
+                $$.tipo = BOOLEAN;
+              }
+              else{
+                fprintf(stdout, "ERROR, no se puede hacer != entre cosas diferentes\n" );
+                exit(-1);
+              }
+            }
         //estos solo enteros
-        | exp TOK_MENORIGUAL exp {fprintf(salida,";R:\tcomparacion: exp TOK_MENORIGUAL exp \n");}
-        | exp TOK_MAYORIGUAL exp{fprintf(salida,";R:\tcomparacion: exp TOK_MAYORIGUAL exp \n");}
-        | exp '<' exp {fprintf(salida,";R:\tcomparacion: exp < exp \n");}
-        | exp '>' exp {fprintf(salida,";R:\tcomparacion: exp > exp \n");}
+        | exp TOK_MENORIGUAL exp {
+              fprintf(salida,";R:\tcomparacion: exp TOK_MENORIGUAL exp \n");
+              //esto es provisional
+              $1.tipo=ENTERO;
+              $3.tipo=ENTERO;
+
+              if($1.tipo == $3.tipo && $1.tipo==ENTERO){
+                //con la ts hay qu ver si son variables
+                menor_igual(salida, 1, 1, etiqueta_global++);
+                $$.tipo = BOOLEAN;
+              }
+              else{
+                fprintf(stdout, "ERROR, no se puede hacer <= entre cosas diferentes a enteros\n" );
+                exit(-1);
+              }
+            }
+        | exp TOK_MAYORIGUAL exp{
+              fprintf(salida,";R:\tcomparacion: exp TOK_MAYORIGUAL exp \n");
+              //esto es provisional
+              $1.tipo=ENTERO;
+              $3.tipo=ENTERO;
+
+              if($1.tipo == $3.tipo && $1.tipo==ENTERO){
+                //con la ts hay qu ver si son variables
+                mayor_igual(salida, 1, 1, etiqueta_global++);
+                $$.tipo = BOOLEAN;
+              }
+              else{
+                fprintf(stdout, "ERROR, no se puede hacer >= entre cosas diferentes a enteros\n" );
+                exit(-1);
+              }
+            }
+        | exp '<' exp {
+              fprintf(salida,";R:\tcomparacion: exp < exp \n");
+              //esto es provisional
+              $1.tipo=ENTERO;
+              $3.tipo=ENTERO;
+
+              if($1.tipo == $3.tipo && $1.tipo==ENTERO){
+                //con la ts hay qu ver si son variables
+                menor(salida, 1, 1, etiqueta_global++);
+                $$.tipo = BOOLEAN;
+              }
+              else{
+                fprintf(stdout, "ERROR, no se puede hacer < entre cosas diferentes a enteros\n" );
+                exit(-1);
+              }
+            }
+        | exp '>' exp {
+              fprintf(salida,";R:\tcomparacion: exp > exp \n");
+              //esto es provisional
+              $1.tipo=ENTERO;
+              $3.tipo=ENTERO;
+
+              if($1.tipo == $3.tipo && $1.tipo==ENTERO){
+                //con la ts hay qu ver si son variables
+                mayor(salida, 1, 1, etiqueta_global++);
+                $$.tipo = BOOLEAN;
+              }
+              else{
+                fprintf(stdout, "ERROR, no se puede hacer > entre cosas diferentes a enteros\n" );
+                exit(-1);
+              }
+            }
         ;
 
 constante: constante_logica {fprintf(salida,";R:\tconstante: constante_logica\n");
@@ -452,17 +574,18 @@ constante: constante_logica {fprintf(salida,";R:\tconstante: constante_logica\n"
         ;
 constante_logica: TOK_TRUE {fprintf(salida,";R:\tconstante_logica: TOK_TRUE\n");
                     char valor[]={"1"};
-                    escribir_operando(salida, valor, 0);
                     $$.tipo = BOOLEAN;
                     $$.es_direccion = 0;
                     $$.valor_entero = 1;
+                    escribir_operando(salida, valor, 0);
+
         }
         | TOK_FALSE {fprintf(salida,";R:\tconstante_logica: TOK_FALSE\n");
                     char valor[]={"0"};
-                    escribir_operando(salida, valor, 0);
                     $$.tipo = BOOLEAN;
                     $$.es_direccion = 0;
                     $$.valor_entero = 0;
+                    escribir_operando(salida, valor, 0);
 
         }
         ;

@@ -3,9 +3,9 @@
 
 elementoTablaSimbolos * nodo_crearElementoTablaSimbolos(){
 	elementoTablaSimbolos *e;
-
+	
 	e = (elementoTablaSimbolos*)malloc(sizeof(elementoTablaSimbolos));
-
+	
 	e->clave = (char *)malloc(sizeof(char)*TAM_L+1);
 	strcpy(e->clave, "");
 	e->tipo_args = (int*)malloc(sizeof(int));
@@ -86,7 +86,11 @@ elementoTablaSimbolos * nodo_set_ElementoTablaSimbolos(elementoTablaSimbolos *e,
     	printf("\n_No hay id_");
     	return NULL;
     }
-
+    if (!tipo_args){
+    	printf("\n_Falta tipo args_");
+	    return NULL;
+	}
+	
 	strcpy(e->clave, id);
 	e->tipo_args = tipo_args;
 	e->categoria = categoria;
@@ -103,7 +107,6 @@ elementoTablaSimbolos * nodo_set_ElementoTablaSimbolos(elementoTablaSimbolos *e,
 	e->numero_metodos_sobreescribibles = numero_metodos_sobreescribibles;
 	e->numero_metodos_no_sobreescribibles = numero_metodos_no_sobreescribibles;
 	e->tipo_acceso = tipo_acceso;
-        e->tipo_miembro = tipo_miembro;
 	e->posicion_atributo_instancia = posicion_atributo_instancia;
 	e->posicion_metodo_sobreescribible = posicion_metodo_sobreescribible;
 	e->num_acumulado_atributos_instancia = num_acumulado_atributos_instancia;
@@ -124,7 +127,6 @@ elementoTablaSimbolos * nodo_set_ElementoTablaSimbolos(elementoTablaSimbolos *e,
 
 TablaHash* crearTablaHash(int tam) {
 	TablaHash *th;
-        int i=0;
 
     if ((th = (TablaHash *) malloc(sizeof(TablaHash)))) {
         if (!(th->tabla = (NodoHash **) calloc(tam, sizeof(NodoHash *)))) {
@@ -133,12 +135,12 @@ TablaHash* crearTablaHash(int tam) {
         }
         th->tam = tam;
     }
-
-        th->lista = (char**) malloc(sizeof(char*)*100);
-        for(i=0; i<100; i++)
-            th->lista[i] = (char*) malloc(sizeof(char)*100);
-        th->nElem = 0;
-
+    
+    if (!(th->lista = linkedList_ini(NULL, NULL, NULL, NULL, false))){
+		free(th);
+		return NULL;
+	}
+    
     return th;
 }
 
@@ -150,17 +152,6 @@ int eliminarTablaHash(TablaHash *th) {
     if (th) {
         if (th->tabla) {
             for (i = 0; i < th->tam; i++) {
-                if(th->nElem == 0){
-                    free(th->tabla);
-                    /*
-                    for(x=0; x<100; x++){
-                        free(th->lista[x]);
-                    }
-                    */
-                    free(th->lista);
-                    free(th);
-                    return OK;
-                }
                 n1 = th->tabla[i];
                 while (n1) {
                 	if(n1->siguiente){
@@ -178,20 +169,11 @@ int eliminarTablaHash(TablaHash *th) {
 							n1->info = NULL;
 	    				free(n1);
 	    				n1=NULL;
-                                        th->nElem--;
                 	}
                 }
             }
             free(th->tabla);
-            /*
-            for(x=0; x<100; x++){
-
-                    free(th->lista[x]);
-
-            }
-            */
-						free(th->lista);
-
+            linkedList_free(th->lista);
         }
         free(th);
     }
@@ -223,19 +205,7 @@ int funcionHash(char *clave) {
 NodoHash* crearNodoHash(char *clave, elementoTablaSimbolos *info) {
 	NodoHash *nh;
 
-        if(info){
-            nh = (NodoHash *) malloc(sizeof(NodoHash));
-            nh->info = info;
-            nh->clave = (char*) malloc (sizeof(char)*(strlen(clave)+1));
-            if(!nh->clave){
-                    free(nh);
-                    return NULL;
-            }
-            strcpy(nh->clave, clave);
-            nh->siguiente = NULL;
-        }
-
-        else if ((nh = (NodoHash *) malloc(sizeof(NodoHash)))) {
+    if ((nh = (NodoHash *) malloc(sizeof(NodoHash)))) {
     	nh->info = nodo_crearElementoTablaSimbolos();
         if (!nh->info){
         	free(nh);
@@ -267,11 +237,9 @@ int insertarNodoHash(TablaHash *th, char *clave, elementoTablaSimbolos *info) {
     NodoHash *n = NULL;
     NodoHash *n2 = NULL;
 
-    if (th->nElem > 0) {
-        if(buscarNodoHash(th, clave)){
+    if (buscarNodoHash(th, clave)) {
     	//printf("\tEl nodo con clave = %s ya existe... ", clave);
-            return ERROR;
-        }
+        return ERROR;
     }
 
     ind = funcionHash(clave) % th->tam;
@@ -281,24 +249,18 @@ int insertarNodoHash(TablaHash *th, char *clave, elementoTablaSimbolos *info) {
         return ERROR;
     }
 
-    if(th->nElem > 0){
-        if(th->tabla[ind]){
+    if(th->tabla[ind]){
     	n2 = th->tabla[ind];
     	while(n2->siguiente){
     		n2 = n2->siguiente;
     	}
     	n2->siguiente = n;
-        } else {
-            th->tabla[ind] = n;
-        }
     } else {
-        th->tabla[ind] = n;
+    	th->tabla[ind] = n;
     }
 
-    th->lista[th->nElem] = clave;
-    th->nElem++;
-
-
+	linkedList_insert_last(th->lista, clave);
+	
     return OK;
 }
 
@@ -306,135 +268,13 @@ int insertarNodoHash(TablaHash *th, char *clave, elementoTablaSimbolos *info) {
 NodoHash* buscarNodoHash(TablaHash *th, char *clave) {
 	int ind, fh;
     NodoHash *n;
-    if(!th || th->nElem==0){
 
-        return NULL;
-    }
 	fh = funcionHash(clave);
 	//printf("\tFuncion Hash: %d\n", fh);
     ind = fh % th->tam;
-    n = th->tabla[ind];
-    if (!n){
-        return NULL;
-    }
-
+	n = th->tabla[ind];
     while (n && (!n->info || strcmp(n->clave, clave))) {
         n = n->siguiente;
     }
     return n;
-}
-bool printHashDot(FILE* fp, TablaHash* th){
-	register int i;
-	register int tam;
-	elementoTablaSimbolos* elem_aux = NULL;
-	NodoHash* nodo_aux = NULL;
-
-	if(!fp || !th)
-		return false;
-
-	if((tam = th->tam) < 0)
-		return false;
-
-	for(i=0; i<tam; i++){
-		if((nodo_aux = th->tabla[i])){
-			while (nodo_aux) {
-				elem_aux = nodo_aux->info;
-				switch(elem_aux->categoria){
-					case VARIABLE:
-						switch(elem_aux->tipo_acceso){
-							case ACCESO_CLASE:
-								fprintf(fp, "secret ");
-								break;
-							case ACCESO_HERENCIA:
-								fprintf(fp, "hidden ");
-								break;
-							case ACCESO_TODOS:
-								fprintf(fp, "exposed ");
-								break;
-							default:
-								break;
-						}
-						switch(elem_aux->tipo){
-							case BOOLEAN:
-								fprintf(fp, "bool ");
-								break;
-							case INT:
-								fprintf(fp, "int ");
-								break;
-						}
-						switch(elem_aux->clase){
-							case VECTOR:
-								fprintf(fp, "*%s\\l", elem_aux->clave);
-								break;
-							default:
-								fprintf(fp, "%s\\l", elem_aux->clave);
-								break;
-						}
-						break;
-					case FUNCION:
-						fprintf(fp, "func ");
-						switch(elem_aux->tipo){
-							case BOOLEAN:
-								fprintf(fp, "bool %s\\l", elem_aux->clave);
-								break;
-							case INT:
-								fprintf(fp, "int %s\\l", elem_aux->clave);
-								break;
-						}
-						break;
-					case METODO_SOBREESCRIBIBLE:
-						switch(elem_aux->tipo_acceso){
-							case ACCESO_CLASE:
-								fprintf(fp, "secret ");
-								break;
-							case ACCESO_HERENCIA:
-								fprintf(fp, "hidden ");
-								break;
-							case ACCESO_TODOS:
-								fprintf(fp, "exposed ");
-								break;
-							default:
-								break;
-						}
-						switch(elem_aux->tipo){
-							case BOOLEAN:
-								fprintf(fp, "bool %s\\l", elem_aux->clave);
-								break;
-							case INT:
-								fprintf(fp, "int %s\\l", elem_aux->clave);
-								break;
-						}
-						break;
-					case METODO_NO_SOBREESCRIBIBLE:
-						fprintf(fp, "static ");
-						switch(elem_aux->tipo_acceso){
-							case ACCESO_CLASE:
-								fprintf(fp, "secret ");
-								break;
-							case ACCESO_HERENCIA:
-								fprintf(fp, "hidden ");
-								break;
-							case ACCESO_TODOS:
-								fprintf(fp, "exposed ");
-								break;
-							default:
-								break;
-						}
-						switch(elem_aux->tipo){
-							case BOOLEAN:
-								fprintf(fp, "bool %s\\l", elem_aux->clave);
-								break;
-							case INT:
-								fprintf(fp, "int %s\\l", elem_aux->clave);
-								break;
-						}
-						break;
-					case NINGUNO:
-						break;
-				}
-				nodo_aux = nodo_aux->siguiente;
-			}
-		}
-	}
-	return true;
 }

@@ -30,4 +30,4 @@ prueba:
 
 
 clean:
-	rm -f prueba.o pruebaSemantico lex.yy.c *.asm y.*
+	rm -f prueba* pruebaSemantico lex.yy.c *.asm y.*

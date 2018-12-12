@@ -1,19 +1,25 @@
-#ifndef TABLA_SIMBOLOS
-#define TABLA_SIMBOLOS
+#ifndef ESTRUCTURAS_H
+#define ESTRUCTURAS_H
 
+#include "hash.h"
 
+typedef struct _Grafo Grafo;
+typedef struct _Nodo Nodo;
 typedef struct _tablaSimbolosAmbitos tablaSimbolosAmbitos;
 typedef struct _tablaSimbolosClases tablaSimbolosClases;
 
+struct _Grafo {
+	List* raiz;
+    List* nodos;
+};
 
-#include "nodo.h"
-#include "hash.h"
-#include "grafo.h"
-
-
-/***************************/
-/*Diseño de la TSC y la TSA*/
-/***************************/
+struct _Nodo {
+	char* nombre;
+	tablaSimbolosAmbitos* info;
+    List* padres;
+    List* hijos;
+    List* padres_familia;
+};
 
 struct _tablaSimbolosAmbitos {
     TablaHash *global;
@@ -29,6 +35,10 @@ struct _tablaSimbolosClases {
     char *nombre;
    
 };
+
+
+
+
 
 /******************************************/
 /*Funciones de gestion de tablas y ambitos*/
@@ -92,7 +102,7 @@ int cerrarTablaSimbolosClases(tablaSimbolosClases* t);
 * de la tabla de símbolos por ámbitos de main
 * 
 **/
-int abrirAmbitoPpalMain(tablaSimbolosAmbitos* t);
+int abrirAmbitoPpalMain(tablaSimbolosAmbitos* t, char *nombre_ambito);
 /**
 * abrirAmbitoMain
 *
@@ -134,14 +144,14 @@ int tablaSimbolosClasesCerrarAmbitoEnClase(tablaSimbolosClases * grafo, char * i
 * Busca en la jerarquía de clases (en las tablas tablaAmbitos de cada clase)
 * 
 **/
-int buscarIdEnJerarquiaDesdeClase(tablaSimbolosClases *t, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos * e, char * nombre_ambito_encontrado);
+int buscarIdEnJerarquiaDesdeClase(tablaSimbolosClases *t, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado);
 /**
 * buscarTablaSimbolosAmbitosConPrefijos
 *
 * Encuentra simbolos por prefijo
 * 
 **/
-int buscarTablaSimbolosAmbitosConPrefijos (tablaSimbolosAmbitos *tA, char *id, elementoTablaSimbolos *e, char *id_ambito);
+int buscarTablaSimbolosAmbitosConPrefijos (tablaSimbolosAmbitos *tA, char *id, elementoTablaSimbolos **e, char *id_ambito);
 /**
 * buscarIdNoCualificado
 *
@@ -149,7 +159,7 @@ int buscarTablaSimbolosAmbitosConPrefijos (tablaSimbolosAmbitos *tA, char *id, e
 * El identificador no debe ir cualificado
 * 
 **/
-int buscarIdNoCualificado(tablaSimbolosClases *t, tablaSimbolosAmbitos *tabla_main, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos * e, char * nombre_ambito_encontrado);
+int buscarIdNoCualificado(tablaSimbolosClases *t, tablaSimbolosAmbitos *tabla_main, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado);
 /**
 * buscarIdIDCualificadoClase
 *
@@ -157,7 +167,7 @@ int buscarIdNoCualificado(tablaSimbolosClases *t, tablaSimbolosAmbitos *tabla_ma
 * Se utiliza cuando se cualifica con el nombre de una clase
 * 
 **/
-int buscarIdIDCualificadoClase(tablaSimbolosClases *t, char * nombre_clase_cualifica, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos * e, char * nombre_ambito_encontrado);
+int buscarIdIDCualificadoClase(tablaSimbolosClases *t, char * nombre_clase_cualifica, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado);
 /**
 * buscarIdCualificadoInstancia
 *
@@ -165,7 +175,7 @@ int buscarIdIDCualificadoClase(tablaSimbolosClases *t, char * nombre_clase_cuali
 * Se utiliza cuando se cualifica con el nombre de una instancia
 * 
 **/
-int buscarIdCualificadoInstancia(tablaSimbolosClases *t, tablaSimbolosAmbitos * tabla_main, char * nombre_instancia_cualifica, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos * e, char * nombre_ambito_encontrado);
+int buscarIdCualificadoInstancia(tablaSimbolosClases *t, tablaSimbolosAmbitos * tabla_main, char * nombre_instancia_cualifica, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado);
 
 /**********************************************************/
 /*Busqueda de identificadores en la parte de declaraciones*/
@@ -178,7 +188,7 @@ int buscarIdCualificadoInstancia(tablaSimbolosClases *t, tablaSimbolosAmbitos * 
 * Se utiliza cuando se quiere declarar un miembro de clase (ya sea método o atributo)
 * 
 **/
-int buscarParaDeclararMiembroClase( tablaSimbolosClases *t, char * nombre_clase_desde, char * nombre_miembro, elementoTablaSimbolos * e, char * nombre_ambito_encontrado);
+int buscarParaDeclararMiembroClase(tablaSimbolosClases *t, char * nombre_clase_desde, char * nombre_miembro, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado);
 /**
 * iniciarTablaSimbolosClases
 *
@@ -186,35 +196,35 @@ int buscarParaDeclararMiembroClase( tablaSimbolosClases *t, char * nombre_clase_
 * Se utiliza cuando se quiere declarar un miembro de instancia
 * 
 **/
-int buscarParaDeclararMiembroInstancia(tablaSimbolosClases *t, char * nombre_clase_desde, char * nombre_miembro, elementoTablaSimbolos * e, char * nombre_ambito_encontrado);
+int buscarParaDeclararMiembroInstancia(tablaSimbolosClases *t, char * nombre_clase_desde, char * nombre_miembro, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado);
 /**
 * buscarTablaSimbolosAmbitoActual
 *
 * Busca el símbolo id en la tabla de símbolos t (especialmente pensada para main)
 * 
 **/
-int buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, char* id, elementoTablaSimbolos* e, char * id_ambito);
+int buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, char* id, elementoTablaSimbolos ** e, char * id_ambito);
 /**
 * buscarTablaSimbolosClasesAmbitoActual
 *
 * Esta función se utilizará en situaciones similares a la anterior pero cuando se está en un método de una clase
 * 
 **/
-int buscarTablaSimbolosClasesAmbitoActual(tablaSimbolosClases *t, char * nombre_clase, char * nombre_id, elementoTablaSimbolos * e, char * nombre_ambito_encontrado);
+int buscarTablaSimbolosClasesAmbitoActual(tablaSimbolosClases *t, char * nombre_clase, char * nombre_id, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado);
 /**
 * buscarParaDeclararIdTablaSimbolosAmbitos
 *
 * Esta función realiza la busqueda previa a la declaracion de un identificador de cualquier tipo fuera de la jerarquia de clases
 * 
 **/
-int buscarParaDeclararIdTablaSimbolosAmbitos(tablaSimbolosAmbitos *t, char *id, elementoTablaSimbolos *e, char*idAmbito);
+int buscarParaDeclararIdTablaSimbolosAmbitos(tablaSimbolosAmbitos *t, char *id, elementoTablaSimbolos **e, char*idAmbito);
 /**
 * buscarParaDeclararIdLocalEnMetodo
 *
 * Esta función realiza la busqueda previa a la declaracion de un identificador local en un metodo de una clase
 * 
 **/
-int buscarParaDeclararIdLocalEnMetodo(tablaSimbolosClases *t, char *nombre_clase, char *nombre_id, elementoTablaSimbolos *e, char *nombre_ambito_encontrado);
+int buscarParaDeclararIdLocalEnMetodo(tablaSimbolosClases *t, char *nombre_clase, char *nombre_id, elementoTablaSimbolos **e, char *nombre_ambito_encontrado);
 /********************************************************************/
 /*Funciones insercion simbolos que no involucren creacion de ambitos*/
 /********************************************************************/
@@ -292,4 +302,67 @@ tablaSimbolosClases * tablaSimbolosClasesToDot(tablaSimbolosClases * grafo);
 **/
 int tablaSimbolosClasesANasm(tablaSimbolosClases *t);
 
-#endif /*TABLA_SIMBOLOS*/
+
+
+
+
+
+
+
+
+
+
+
+
+/******************************************/
+/*Funciones de gestion de grafos          */
+/******************************************/
+
+Grafo* grafo_ini();
+void grafo_free(Grafo* grafo);
+List* grafo_get_nodes(const Grafo* grafo);
+List* grafo_get_raiz(const Grafo* grafo);
+bool grafo_insert_raiz(Grafo* grafo, char* nombre, tablaSimbolosAmbitos* info);
+bool grafo_insert_node(Grafo* grafo, char* nombre, tablaSimbolosAmbitos* info, char** padres, int tam);
+int grafo_get_size(Grafo* grafo);
+Nodo* grafo_find_nodo(Grafo *grafo, char *nombre);
+Nodo* grafo_find_raiz(Grafo* grafo, char* nombre);
+bool grafo_print(FILE* fp, Grafo* grafo);
+
+
+
+
+
+
+
+
+
+
+
+
+
+/******************************************/
+/*Funciones de gestion de nodos           */
+/******************************************/
+
+Nodo* nodo_ini(char *nombre, tablaSimbolosAmbitos *info, List *padres);
+Nodo* nodo_ini_cmp(char* nombre);
+void* nodo_copiar(const void* nodo);
+
+void nodo_free(void *nodo);
+
+char* nodo_get_nombre(const Nodo* nodo);
+tablaSimbolosAmbitos* nodo_get_info(const Nodo* nodo);
+List* nodo_get_hijos(const Nodo* nodo);
+List* nodo_get_padres(const Nodo* nodo);
+List* nodo_get_padres_familia(const Nodo* nodo);
+
+bool nodo_insert_padre(Nodo* nodo, Nodo* padre);
+bool nodo_insert_hijo(Nodo* nodo, Nodo* hijo);
+
+int nodo_cmp(const void* nodo1, const void* nodo2);
+
+bool nodo_print(FILE* fp, const void* nodo);
+bool grafo_print_dot(FILE* fp, Grafo* grafo);
+
+#endif

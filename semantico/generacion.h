@@ -38,12 +38,12 @@ Esta misma función se invocará cuando en el compilador se declaren vectores, p
 /*Rodri*/
 void escribir_segmento_codigo(FILE* fpasm);
 /*
-   Para escribir el comienzo del segmento .text, básicamente se indica que se 
+   Para escribir el comienzo del segmento .text, básicamente se indica que se
    exporta la etiqueta main y que se usarán las funciones declaradas en la librería olib.o
 */
 
 void escribir_inicio_main(FILE* fpasm);
-/* 
+/*
    En este punto se debe escribir, al menos, la etiqueta main y la sentencia que guarda el puntero de pila en su variable (se recomienda usar __esp).
 */
 
@@ -66,7 +66,7 @@ es_variable indica si este operando es una variable (como por ejemplo b1) con un
 
 void asignar(FILE* fpasm, char* nombre, int es_variable);
 /*
-Genera el código para asignar valor a la variable de nombre nombre. 
+Genera el código para asignar valor a la variable de nombre nombre.
 Se toma el valor de la cima de la pila.
 El último argumento es el que indica si lo que hay en la cima de la pila es una referencia (1) o ya un valor explícito (0).
 */
@@ -94,22 +94,22 @@ void y(FILE* fpasm, int es_variable_1, int es_variable_2);
 
 void cambiar_signo(FILE* fpasm, int es_variable);
 /*
-   Función aritmética de cambio de signo. 
+   Función aritmética de cambio de signo.
    Es análoga a las binarias, excepto que sólo requiere de un acceso a la pila ya que sólo usa un operando.
 */
 
 void no(FILE* fpasm, int es_variable, int cuantos_no);
 /*
    Función monádica lógica de negación. No hay un código de operación de la ALU que realice
-   esta operación por lo que se debe codificar un algoritmo que, si encuentra en la cima de la pila 
+   esta operación por lo que se debe codificar un algoritmo que, si encuentra en la cima de la pila
    un 0 deja en la cima un 1 y al contrario.
-   El último argumento es el valor de etiqueta que corresponde (sin lugar a dudas, la implementación 
+   El último argumento es el valor de etiqueta que corresponde (sin lugar a dudas, la implementación
    del algoritmo requerirá etiquetas). Véase en los ejemplos de programa principal como puede gestionarse
    el número de etiquetas cuantos_no.
 */
 
 /* FUNCIONES COMPARATIVAS */
-/* 
+/*
    Todas estas funciones reciben como argumento si los elementos a comparar son o no variables.
    El resultado de las operaciones, que siempre será un booleano (“1” si se cumple la comparación y “0”
    si no se cumple), se deja en la pila como en el resto de operaciones. Se deben usar etiquetas para
@@ -129,7 +129,7 @@ void mayor(FILE* fpasm, int es_variable1, int es_variable2, int etiqueta);
 
 /* FUNCIONES DE ESCRITURA Y LECTURA */
 /*
-   Se necesita saber el tipo de datos que se va a procesar (ENTERO o BOOLEANO) ya que hay 
+   Se necesita saber el tipo de datos que se va a procesar (ENTERO o BOOLEANO) ya que hay
    diferentes funciones de librería para la lectura (idem. escritura) de cada tipo.
    Se deben insertar en la pila los argumentos necesarios, realizar la llamada (call) a la
    función de librería correspondiente y limpiar la pila.
@@ -137,5 +137,22 @@ void mayor(FILE* fpasm, int es_variable1, int es_variable2, int etiqueta);
 void leer(FILE* fpasm, char* nombre, int tipo);
 /*Rodri*/
 void escribir(FILE* fpasm, int es_variable, int tipo);
+
+
+void ifthenelse_inicio(FILE * fpasm, int exp_es_variable, int etiqueta);
+void ifthen_inicio(FILE * fpasm, int exp_es_variable, int etiqueta);
+void ifthen_fin(FILE * fpasm, int etiqueta);
+void if_exp_pila (FILE * fpasm, int exp_es_variable, int etiqueta);
+void ifthenelse_fin_then( FILE * fpasm, int etiqueta);
+void ifthenelse_fin( FILE * fpasm, int etiqueta);
+void while_inicio(FILE * fpasm, int etiqueta);
+void while_exp_pila (FILE * fpasm, int exp_es_variable, int etiqueta);
+void while_fin( FILE * fpasm, int etiqueta);
+void escribir_elemento_vector(FILE * fpasm,char * nombre_vector, int tam_max, int exp_es_direccion);
+void declararFuncion(FILE * fd_s, char * nombre_funcion, int num_var_loc);
+void retornarFuncion(FILE * fd_s, int es_variable);
+void escribirParametro(FILE* fpasm, int pos_parametro, int num_total_parametros);
+void escribirVariableLocal(FILE* fpasm, int posicion_variable_local);
+
 
 #endif

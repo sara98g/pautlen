@@ -101,23 +101,29 @@ int abrirClase(tablaSimbolosClases* t, char* id_clase){
 *
 */
 int abrirClaseHeredaN (tablaSimbolosClases* t, char *id_clase, int num_padres, char** nombres_padres){
+	int i;
 	tablaSimbolosAmbitos *tA;
 
 	if (!t){
 		return ERROR;
 	}
 
-        tA = iniciarTablaSimbolosAmbitos();
-        if (!tA){
+	for (i = 0; i < num_padres; i++){
+		if (grafo_find_nodo(t->grafo, id_clase) == NULL){
+			return ERROR;
+		}
+	}
+	tA = iniciarTablaSimbolosAmbitos();
+	if (!tA){
 		return ERROR;
 	}
-        
-        if (abrirAmbitoPpalMain(tA, id_clase) == ERROR){
-            destruirTablaSimbolosAmbitos(tA);
-            return ERROR;
-        }
 
-        if(grafo_insert_node(t->grafo, id_clase, tA, nombres_padres, num_padres) == false){
+	if (abrirAmbitoPpalMain(tA, id_clase) == ERROR){
+    	destruirTablaSimbolosAmbitos(tA);
+		return ERROR;
+	}
+
+	if (grafo_insert_node(t->grafo, t->nombre, tA, nombres_padres, num_padres) == false){
 		destruirTablaSimbolosAmbitos(tA);
 		return ERROR;
 	}
@@ -176,7 +182,7 @@ int cerrarTablaSimbolosClases(tablaSimbolosClases* t){
 		return ERROR;
 	}
 
-	//grafo_free(t->grafo);
+	grafo_free(t->grafo);
 	free(t->nombre);
 	free(t);
 	return OK;
@@ -230,7 +236,11 @@ int abrirAmbitoMain(tablaSimbolosAmbitos * t, char* id_ambito, int categoria_amb
 	e->tipo = tipo_ambito;
 	strcpy(e->clave, id_ambito); 
 	
-    return insertarNodoHash(t->global, e->clave, e);
+    if (insertarNodoHash(t->global, e->clave, e) == ERROR){
+		    return ERROR;
+    }
+
+    return OK;
 }
 /**
 * cerrarAmbitoMain
@@ -245,8 +255,6 @@ int cerrarAmbitoMain(tablaSimbolosAmbitos* t){
 	}
 	eliminarTablaHash(t->local);
 	free(t->nombre_local);
-    t->local = NULL;
-    t->nombre_local = NULL;
 	t->idAmbito = GLOBAL;
 
 	return OK;
@@ -260,9 +268,6 @@ int cerrarAmbitoMain(tablaSimbolosAmbitos* t){
 int tablaSimbolosClasesAbrirAmbitoEnClase(tablaSimbolosClases * grafo, char * id_clase, char* id_ambito, int categoria_ambito, int tipo_ambito, int acceso_ambito, int tipo_miembro, int posicion_metodo_sobre){
 	Nodo *nodo;
 	tablaSimbolosAmbitos *tA;
-        char *tok;
-        char aux[1000] = "";
-        char aux2[1000] = "";
 	
 	/*elementoTablaSimbolos *e;*/
 	
@@ -276,12 +281,11 @@ int tablaSimbolosClasesAbrirAmbitoEnClase(tablaSimbolosClases * grafo, char * id
 	if (tA == NULL){
 		return ERROR;
 	}
-        
-        strcpy(aux, id_ambito);
-        tok = strtok(id_ambito, "_");
-        strcat(aux2, &aux[strlen(tok)+1]);
-        
-	return abrirAmbitoMain(tA, aux2, categoria_ambito, tipo_ambito);
+	
+	if (abrirAmbitoMain(tA, id_ambito, categoria_ambito, tipo_ambito) == ERROR){
+		return ERROR;
+	}
+	return OK;
 	/*DUDA: e->categoria = categoria_ambito;
 	e->tipo_acceso = acceso_ambito;
 	e->tipo_miembro = tipo_miembro;
@@ -377,7 +381,7 @@ int buscarIdEnJerarquiaDesdeClase(tablaSimbolosClases *t, char * nombre_id, char
 **/
 int buscarTablaSimbolosAmbitosConPrefijos (tablaSimbolosAmbitos *tA, char *id, elementoTablaSimbolos **e, char *id_ambito){
 	
-	if (!tA || !id || !e){
+	if (!tA || !id || !e || !id_ambito){
 		return ERROR;
 	}
 	
@@ -391,7 +395,7 @@ int buscarTablaSimbolosAmbitosConPrefijos (tablaSimbolosAmbitos *tA, char *id, e
 * 
 **/
 int buscarIdNoCualificado(tablaSimbolosClases *t, tablaSimbolosAmbitos *tabla_main, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado){
-  if (!t || !tabla_main || !nombre_id || !nombre_clase_desde || !e){
+  if (!t || !tabla_main || !nombre_id || !nombre_clase_desde || !e || !nombre_ambito_encontrado){
   	return ERROR;
   }
   if (strcmp(nombre_clase_desde, "main") == 0){
@@ -419,7 +423,7 @@ int buscarIdNoCualificado(tablaSimbolosClases *t, tablaSimbolosAmbitos *tabla_ma
 **/
 int buscarIdIDCualificadoClase(tablaSimbolosClases *t, char * nombre_clase_cualifica, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado){
 	Nodo *nodo;
-	if (!t || !nombre_clase_cualifica || !nombre_id || !nombre_clase_desde || !e || nombre_ambito_encontrado){
+	if (!t || !nombre_clase_cualifica || !nombre_id || !nombre_clase_desde || !e || !nombre_ambito_encontrado){
 		return ERROR;
 	}
 	nodo = grafo_find_nodo(t->grafo, nombre_clase_cualifica);
@@ -440,7 +444,7 @@ int buscarIdIDCualificadoClase(tablaSimbolosClases *t, char * nombre_clase_cuali
 **/
 int buscarIdCualificadoInstancia(tablaSimbolosClases *t, tablaSimbolosAmbitos * tabla_main, char * nombre_instancia_cualifica, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado){
 	
-	if (!t || !tabla_main || !nombre_instancia_cualifica || !nombre_id || !nombre_clase_desde || !e){
+	if (!t || !tabla_main || !nombre_instancia_cualifica || !nombre_id || !nombre_clase_desde || !e || !nombre_ambito_encontrado){
 		return ERROR;
 	}
 	if (buscarIdNoCualificado(t, tabla_main, nombre_instancia_cualifica, nombre_clase_desde, e, nombre_ambito_encontrado) == ERROR){
@@ -478,7 +482,7 @@ int buscarIdCualificadoInstancia(tablaSimbolosClases *t, tablaSimbolosAmbitos * 
 int buscarParaDeclararMiembroClase(tablaSimbolosClases *t, char * nombre_clase_desde, char * nombre_miembro, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado){
 	Nodo *nodo;
 	tablaSimbolosAmbitos *tsa;
-	if (!t || !nombre_clase_desde || !nombre_miembro || !e){
+	if (!t || !nombre_clase_desde || !nombre_miembro || !e || !nombre_ambito_encontrado){
 		return ERROR;
 	}
 	nodo = grafo_find_nodo(t->grafo, nombre_clase_desde);
@@ -500,7 +504,7 @@ int buscarParaDeclararMiembroClase(tablaSimbolosClases *t, char * nombre_clase_d
 * 
 **/
 int buscarParaDeclararMiembroInstancia(tablaSimbolosClases *t, char * nombre_clase_desde, char * nombre_miembro, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado){
-  if (!t || !nombre_clase_desde || !nombre_miembro || !e){
+  if (!t || !nombre_clase_desde || !nombre_miembro || !e || !nombre_ambito_encontrado){
   	return ERROR;
   }
   if (buscarTablaSimbolosClasesAmbitoActual(t, nombre_clase_desde, nombre_miembro, e, nombre_ambito_encontrado) == OK){
@@ -516,17 +520,16 @@ int buscarParaDeclararMiembroInstancia(tablaSimbolosClases *t, char * nombre_cla
 **/
 int buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, char* id, elementoTablaSimbolos ** e, char * id_ambito){
 	NodoHash *n;
-	char aux[1000] = "";
+	char aux[1000];
 	
-	if (!t || !id){
+	if (!t || !id || id_ambito){
 		return ERROR;
 	}
 	if(t->idAmbito == GLOBAL){
-		//sprintf(aux, "%s_%s", t->nombre_global, id);
-                /*strcpy(aux, t->nombre_global);
-                strcpy(aux, "_");
-                strcpy(aux, id);*/
-		n = buscarNodoHash(t->global, id);
+		strcpy(aux, t->nombre_global);
+		strcpy(aux, "_");
+		strcpy(aux, id);
+		n = buscarNodoHash(t->global, aux);
 		if(n){
 			*e = nodo_get_ElementoTablaSimbolos(n);	
 			strcpy(id_ambito, t->nombre_global);
@@ -534,15 +537,12 @@ int buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, char* id, elemento
 		}
 		return ERROR;
 	} else if (t->idAmbito == LOCAL){
-                sprintf(aux, "%s_%s", t->nombre_local, id);
-		n = buscarNodoHash(t->local, aux);
+		n = buscarNodoHash(t->local, id);
 		if(!n){
-                    sprintf(aux, "%s_%s", t->nombre_global, id);
-			/*strcpy(aux, t->nombre_global);
+			strcpy(aux, t->nombre_global);
 			strcpy(aux, "_");
-			strcpy(aux, id);*/
+			strcpy(aux, id);
 			n = buscarNodoHash(t->global, aux);
-			
 			if(n){
 				*e = nodo_get_ElementoTablaSimbolos(n);	
 				strcpy(id_ambito, t->nombre_global);
@@ -569,7 +569,7 @@ int buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, char* id, elemento
 int buscarTablaSimbolosClasesAmbitoActual(tablaSimbolosClases *t, char * nombre_clase, char * nombre_id, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado){
 	Nodo *n;
 	tablaSimbolosAmbitos *tA;
-	if (!t || !nombre_clase || !nombre_id || !e){
+	if (!t || !nombre_clase || !nombre_id || !e || !nombre_ambito_encontrado){
 		return ERROR;
 	}
 	n = grafo_find_nodo(t->grafo, nombre_clase);
@@ -608,7 +608,7 @@ int buscarParaDeclararIdTablaSimbolosAmbitos(tablaSimbolosAmbitos *t, char *id, 
 int buscarParaDeclararIdLocalEnMetodo(tablaSimbolosClases *t, char *nombre_clase, char *nombre_id, elementoTablaSimbolos **e, char *nombre_ambito_encontrado){
 	tablaSimbolosAmbitos *tsa;
 	Nodo *aux;
-	if (!t || !nombre_clase || !nombre_id || !e){
+	if (!t || !nombre_clase || !nombre_id || !e || !nombre_ambito_encontrado){
 		return ERROR;
 	}
 	aux = grafo_find_nodo(t->grafo, nombre_clase);
@@ -690,7 +690,7 @@ int insertarTablaSimbolosClases(tablaSimbolosClases * grafo, char* id_clase,
 										posicion_metodo_sobreescribible, num_acumulado_atributos_instancia,
 										num_acumulado_metodos_sobreescritura, posicion_acumulada_atributos_instancia,
 										posicion_acumulada_metodos_sobreescritura, tipo_args);
-	insertarTablaSimbolosAmbitos(tA, id, e);
+	insertarTablaSimbolosAmbitos(tA, id_clase, e);
 
 
 	return OK;
@@ -704,23 +704,39 @@ int insertarTablaSimbolosClases(tablaSimbolosClases * grafo, char* id_clase,
 **/
 int insertarTablaSimbolosAmbitos(tablaSimbolosAmbitos * tA, char* id_clase, elementoTablaSimbolos *e){
 
-	if (!tA || !id_clase || !e){
+	/*if (!tA || !id_clase || !e){
+		printf("BUENAS");
+		return ERROR;
+	}*/
+	if (!tA){
+		printf("\nNO HAY TA");
 		return ERROR;
 	}
-	
+	if (!id_clase){
+		printf("\nNO HAY ID CLASE");
+		return ERROR;
+	}
+	if (!e){
+		printf("\nNO HAY ELEM");
+		return ERROR;
+	}
 	if (tA->idAmbito == CERRADO){
+		printf("IDIOTA");
 		return ERROR;
 	}
 	if (tA->idAmbito == GLOBAL){
 		if (insertarNodoHash(tA->global, id_clase, e) == ERROR){
+			printf("MU MAL");
 			return ERROR;
 		}
 	}
 	if (tA->idAmbito == LOCAL){
 		if (insertarNodoHash(tA->local, id_clase, e) == ERROR){
+			printf("FATAL");
 			return ERROR;
 		}
 	}
+	printf("GENIAL");
 	return OK;
 }
 
@@ -787,7 +803,7 @@ tablaSimbolosClases * tablaSimbolosClasesToDot(tablaSimbolosClases * grafo){
 		fprintf(stdout, "Error al abrir el archivo");
 	}
 	
-	grafo_print_dot(f, grafo->grafo);
+	grafo_print(f, grafo->grafo);
 	
 	fclose(f);
 	return grafo;

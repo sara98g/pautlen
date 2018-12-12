@@ -30,8 +30,8 @@ NodeList * nodelinkedList_ini();
 List* linkedList_ini(destroy_elementlist_function_type f1, copy_elementlist_function_type f2, print_elementlist_function_type f3, cmp_elementlist_function_type f4, bool copy){
     List* l = NULL;
     
-    //if (!f1 || !f2 || !f3 || !f4)
-    //    return NULL;
+    if (!f1 || !f2 || !f3 || !f4)
+        return NULL;
     
     l = (List*)malloc(sizeof(List));
     if (!l)
@@ -422,23 +422,6 @@ bool linkedList_print(FILE *fp, const List* l){
     return true;    
 }
 
-bool linkedList_print_alt(FILE *fp, const List* l){
-    NodeList * n = NULL;
-    
-    if(!fp || !l)
-        return false;
-
-    if(linkedList_isEmpty(l) == false){
-    	n = l->node;
-        do{
-            n = n->next;
-            if(l->print_element_function(fp, n->data) == false)
-                return false;
-        }while(n != l->node);   
-    }
-    
-    return true;    
-}
 
 /**************** NODELIST ESTRUCTURE FUNCTIONS **********************/
 

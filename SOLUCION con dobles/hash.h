@@ -26,7 +26,7 @@ typedef enum {
 } CATEGORIA;
 
 typedef enum {
-	INT = 1, BOOLEAN = 3
+	BOOLEAN = 1, INT = 2
 } TIPO;
 
 typedef enum {
@@ -42,7 +42,7 @@ typedef enum {
 } TIPO_ACCESO;
 
 typedef enum {
-    MIEMBRO_UNICO = 1, MIEMBRO_NO_UNICO = 2
+    MIEMBRO_UNICO = 0, MIEMBRO_NO_UNICO = 1
 } TIPO_MIEMBRO;
 
 
@@ -87,8 +87,7 @@ typedef struct NodoHash {
 
 typedef struct TablaHash {
 	int tam;    	/*Tamaño de la tabla hash.*/
-	char **lista;
-        int nElem;
+	List* lista;
 	NodoHash **tabla; /*Array de punteros a los primeros elementos de la tabla hash.*/
 } TablaHash;
 
@@ -147,5 +146,5 @@ int insertarNodoHash(TablaHash *th, char *clave, elementoTablaSimbolos *info);
 
 /*Busca en la tabla hash el nodo identificado por su clave y lo devuelve. NULL en caso contrario.*/
 NodoHash* buscarNodoHash(TablaHash *th, char *clave);
-bool printHashDot(FILE* fp, TablaHash* th);
+
 #endif
