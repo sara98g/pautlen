@@ -10,8 +10,9 @@ extern void yyerror(char *e);
 
 extern FILE *yyin;
 extern FILE *salida;
-/*char idclase[] = "ClasePrincipal";
-tablaSimbolosClases* ts_c;*/
+
+tablaSimbolosAmbitos *tsa;
+
 
 int main(int argc, char** argv)
 {
@@ -31,29 +32,24 @@ int main(int argc, char** argv)
         fprintf(stdout,"No se pudo abrir el fichero de entrada \n");
         return 1;
     }
-/*
-    ts_c = iniciarTablaSimbolosClases("main");
-    if( ts_c == NULL){
-        printf("Error creando el grafo\n");
-        exit(-1);
-    }
-    if(abrirClase(ts_c, idclase) == ERROR){
-      printf("Error abriendo tabla de simbolos\n");
+
+    tsa = iniciarTablaSimbolosAmbitos();
+    if(tsa == NULL){
+      printf("Error al iniciar TSA");
       exit(-1);
-    }*/
+}
+    if (abrirAmbitoPpalMain(tsa, "main")==ERROR){
+      printf("Error al abrir el ambito main");
+      exit(-1);
+    }
      do
     {
         yyparse();
     }while (!feof(yyin));
-/*
-    if(cerrarClase(ts_c, idclase, 0, 0, 0,0) == ERROR){
-      printf("Error cerrando tabla simbolos\n");
-      exit(-1);
-    }
-    if(cerrarTablaSimbolosClases(ts_c) == ERROR){
-      printf("Error cerrando grafo\n");
-      exit(-1);
-    }*/
+
+    cerrarAmbitoMain(tsa);
+    destruirTablaSimbolosAmbitos(tsa);
+    //¿tsc?
 
     fclose(yyin);
     fclose(salida);

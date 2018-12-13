@@ -17,7 +17,7 @@
 **/
 tablaSimbolosClases *iniciarTablaSimbolosClases(char * nombre){
   tablaSimbolosClases *t;
-  
+
   if (!nombre){
     return NULL;
   }
@@ -38,9 +38,9 @@ tablaSimbolosClases *iniciarTablaSimbolosClases(char * nombre){
 **/
 tablaSimbolosAmbitos *iniciarTablaSimbolosAmbitos(){
   tablaSimbolosAmbitos *t;
-  
+
   t = (tablaSimbolosAmbitos*)malloc(sizeof(tablaSimbolosAmbitos)*MAX_TAB);
- 
+
   t->idAmbito = CERRADO;
 
   return t;
@@ -49,7 +49,7 @@ tablaSimbolosAmbitos *iniciarTablaSimbolosAmbitos(){
 * destruirTablaSimbolosAmbitos
 *
 * Libera todos los recursos de una tsa creada
-* 
+*
 **/
 void destruirTablaSimbolosAmbitos(tablaSimbolosAmbitos *t){
 	if (!t){
@@ -89,7 +89,7 @@ int abrirClase(tablaSimbolosClases* t, char* id_clase){
 		destruirTablaSimbolosAmbitos(tA);
 		return ERROR;
 	}
-	
+
 	return OK;
 }
 
@@ -101,40 +101,34 @@ int abrirClase(tablaSimbolosClases* t, char* id_clase){
 *
 */
 int abrirClaseHeredaN (tablaSimbolosClases* t, char *id_clase, int num_padres, char** nombres_padres){
-	int i;
 	tablaSimbolosAmbitos *tA;
 
 	if (!t){
 		return ERROR;
 	}
 
-	for (i = 0; i < num_padres; i++){
-		if (grafo_find_nodo(t->grafo, id_clase) == NULL){
-			return ERROR;
-		}
-	}
-	tA = iniciarTablaSimbolosAmbitos();
-	if (!tA){
+        tA = iniciarTablaSimbolosAmbitos();
+        if (!tA){
 		return ERROR;
 	}
 
-	if (abrirAmbitoPpalMain(tA, id_clase) == ERROR){
-    	destruirTablaSimbolosAmbitos(tA);
-		return ERROR;
-	}
+        if (abrirAmbitoPpalMain(tA, id_clase) == ERROR){
+            destruirTablaSimbolosAmbitos(tA);
+            return ERROR;
+        }
 
-	if (grafo_insert_node(t->grafo, t->nombre, tA, nombres_padres, num_padres) == false){
+        if(grafo_insert_node(t->grafo, id_clase, tA, nombres_padres, num_padres) == false){
 		destruirTablaSimbolosAmbitos(tA);
 		return ERROR;
 	}
-	
+
 	return OK;
 }
 
 /**
 * cerrarClase
 *
-* Realiza tareas asociadas con el final de la clase identificada 
+* Realiza tareas asociadas con el final de la clase identificada
 * mediante el segundo argumento
 *
 */
@@ -148,21 +142,23 @@ int cerrarClase(tablaSimbolosClases* t, char *id_clase, int num_atributos_clase,
 
 	if(!(nodo = grafo_find_nodo(t->grafo, id_clase)))
 		return ERROR;
-		
+
 	tsa = nodo_get_info(nodo);
 	if (!tsa){
 		return ERROR;
 	}
-	
+
 	/*Insertar en la TS con la info de e*/
-	
+
 	e = nodo_crearElementoTablaSimbolos();
-	
+
+	e->clave = id_clase;
+	e->categoria = CLASE;
 	e->numero_atributos_clase = num_atributos_clase;
 	e->numero_atributos_instancia = num_atributos_instancia;
 	e->numero_metodos_sobreescribibles = num_metodos_sobreescribibles;
 	e->numero_metodos_no_sobreescribibles = num_metodos_no_sobreescribibles;
-	
+
 	if (insertarTablaSimbolosAmbitos(tsa, id_clase, e) == ERROR){
 		return ERROR;
 	}
@@ -182,7 +178,7 @@ int cerrarTablaSimbolosClases(tablaSimbolosClases* t){
 		return ERROR;
 	}
 
-	grafo_free(t->grafo);
+	//grafo_free(t->grafo);
 	free(t->nombre);
 	free(t);
 	return OK;
@@ -191,16 +187,16 @@ int cerrarTablaSimbolosClases(tablaSimbolosClases* t){
 /**
 * abrirAmbitoPpalMain
 *
-* Realiza tareas asociadas con la apertura del ámbito principal 
+* Realiza tareas asociadas con la apertura del ámbito principal
 * de la tabla de símbolos por ámbitos de main
-* 
+*
 **/
 int abrirAmbitoPpalMain(tablaSimbolosAmbitos* t, char *nombre_ambito){
 
 	if (!t){
 		return ERROR;
 	}
-	
+
 	t->global = crearTablaHash(MAX_TAB);
 	t->idAmbito = GLOBAL;
 	t->nombre_global = (char*)malloc(strlen(nombre_ambito)*sizeof(char)+1);
@@ -213,10 +209,10 @@ int abrirAmbitoPpalMain(tablaSimbolosAmbitos* t, char *nombre_ambito){
 *
 * Realiza tareas asociadas con la apertura del ámbito asociado
 * con una función global dentro del ámbito main
-* 
+*
 **/
 int abrirAmbitoMain(tablaSimbolosAmbitos * t, char* id_ambito, int categoria_ambito, int tipo_ambito){
-    
+
     elementoTablaSimbolos *e;
 
     if (!t || !id_ambito){
@@ -224,30 +220,26 @@ int abrirAmbitoMain(tablaSimbolosAmbitos * t, char* id_ambito, int categoria_amb
     }
     t->nombre_local = (char*)malloc(strlen(id_ambito)*sizeof(char)+1);
     strcpy(t->nombre_local, id_ambito);
-    
+
     t->local = crearTablaHash(MAX_TAB);
     t->idAmbito = LOCAL;
-    
+
     e = nodo_crearElementoTablaSimbolos();
     if (!e){
     	return ERROR;
     }
     e->categoria = categoria_ambito;
 	e->tipo = tipo_ambito;
-	strcpy(e->clave, id_ambito); 
-	
-    if (insertarNodoHash(t->global, e->clave, e) == ERROR){
-		    return ERROR;
-    }
+	strcpy(e->clave, id_ambito);
 
-    return OK;
+    return insertarNodoHash(t->global, e->clave, e);
 }
 /**
 * cerrarAmbitoMain
 *
-* Realiza tareas asociadas con el cierre del ámbito asociado con una 
+* Realiza tareas asociadas con el cierre del ámbito asociado con una
 * función global dentro del ámbito main, cierra el ámbito actual, de hecho
-* 
+*
 **/
 int cerrarAmbitoMain(tablaSimbolosAmbitos* t){
 	if (!t){
@@ -255,6 +247,8 @@ int cerrarAmbitoMain(tablaSimbolosAmbitos* t){
 	}
 	eliminarTablaHash(t->local);
 	free(t->nombre_local);
+    t->local = NULL;
+    t->nombre_local = NULL;
 	t->idAmbito = GLOBAL;
 
 	return OK;
@@ -268,9 +262,12 @@ int cerrarAmbitoMain(tablaSimbolosAmbitos* t){
 int tablaSimbolosClasesAbrirAmbitoEnClase(tablaSimbolosClases * grafo, char * id_clase, char* id_ambito, int categoria_ambito, int tipo_ambito, int acceso_ambito, int tipo_miembro, int posicion_metodo_sobre){
 	Nodo *nodo;
 	tablaSimbolosAmbitos *tA;
-	
+        char *tok;
+        char aux[1000] = "";
+        char aux2[1000] = "";
+
 	/*elementoTablaSimbolos *e;*/
-	
+
 	if (!grafo || !id_clase || !id_ambito){
 		return ERROR;
 	}
@@ -281,23 +278,24 @@ int tablaSimbolosClasesAbrirAmbitoEnClase(tablaSimbolosClases * grafo, char * id
 	if (tA == NULL){
 		return ERROR;
 	}
-	
-	if (abrirAmbitoMain(tA, id_ambito, categoria_ambito, tipo_ambito) == ERROR){
-		return ERROR;
-	}
-	return OK;
+
+        strcpy(aux, id_ambito);
+        tok = strtok(id_ambito, "_");
+        strcat(aux2, &aux[strlen(tok)+1]);
+
+	return abrirAmbitoMain(tA, aux2, categoria_ambito, tipo_ambito);
 	/*DUDA: e->categoria = categoria_ambito;
 	e->tipo_acceso = acceso_ambito;
 	e->tipo_miembro = tipo_miembro;
 	e->posicion_metodo_sobreescribible = posicion_metodo_sobre;*/
-	
-	
+
+
 }
 /**
 * tablaSimbolosClasesCerrarAmbitoEnClase
 *
 * Realiza tareas asociadas con el cierre del ámbito asociado con un método
-* 
+*
 **/
 int tablaSimbolosClasesCerrarAmbitoEnClase(tablaSimbolosClases * grafo, char * id_clase){
 	Nodo *nodo;
@@ -308,7 +306,7 @@ int tablaSimbolosClasesCerrarAmbitoEnClase(tablaSimbolosClases * grafo, char * i
 	if(!(nodo = grafo_find_nodo(grafo->grafo, id_clase))){
 		return ERROR;
 	}
-	
+
 	tA = nodo_get_info(nodo);
 	if (tA == NULL){
 		return ERROR;
@@ -327,14 +325,14 @@ int tablaSimbolosClasesCerrarAmbitoEnClase(tablaSimbolosClases * grafo, char * i
 * buscarIdEnJerarquiaDesdeClase
 *
 * Busca en la jerarquía de clases (en las tablas tablaAmbitos de cada clase)
-* 
+*
 **/
 int buscarIdEnJerarquiaDesdeClase(tablaSimbolosClases *t, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado){
 	Nodo *nodo;
 	tablaSimbolosAmbitos *tA;
 
-	
-	
+
+
 	if (!t || !nombre_id || !nombre_clase_desde){
 		return ERROR;
 	}
@@ -353,10 +351,10 @@ int buscarIdEnJerarquiaDesdeClase(tablaSimbolosClases *t, char * nombre_id, char
 		return aplicarAccesos(t, nombre_clase_desde, nombre_ambito_encontrado, *e);
 	}
 
-	
+
 	/*Luego si no se ha encontrado miro en los padres y llamo a buscar basico*/
 	/*Si se ha encontrado entonces hacer aplicar accesos*/
-	
+
 	nodo = grafo_find_raiz(t->grafo, nombre_clase_desde);
 	if (!nodo){
 		return ERROR;
@@ -370,21 +368,21 @@ int buscarIdEnJerarquiaDesdeClase(tablaSimbolosClases *t, char * nombre_id, char
 	if (buscarTablaSimbolosAmbitoActual(tA, nombre_id, e, nombre_ambito_encontrado) == OK){
 		return aplicarAccesos(t, nombre_clase_desde, nombre_ambito_encontrado, *e);
 	}
-	
+
 	return ERROR;
 }
 /**
 * buscarTablaSimbolosAmbitosConPrefijos
 *
 * Encuentra simbolos por prefijo
-* 
+*
 **/
 int buscarTablaSimbolosAmbitosConPrefijos (tablaSimbolosAmbitos *tA, char *id, elementoTablaSimbolos **e, char *id_ambito){
-	
+
 	if (!tA || !id || !e){
 		return ERROR;
 	}
-	
+
 	return buscarTablaSimbolosAmbitoActual(tA, id, e, id_ambito);
 }
 /**
@@ -392,7 +390,7 @@ int buscarTablaSimbolosAmbitosConPrefijos (tablaSimbolosAmbitos *tA, char *id, e
 *
 * Se responsabiliza de la búsqueda de un identificador cuando aparece en las sentencias y se quiere usar
 * El identificador no debe ir cualificado
-* 
+*
 **/
 int buscarIdNoCualificado(tablaSimbolosClases *t, tablaSimbolosAmbitos *tabla_main, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado){
   if (!t || !tabla_main || !nombre_id || !nombre_clase_desde || !e){
@@ -419,7 +417,7 @@ int buscarIdNoCualificado(tablaSimbolosClases *t, tablaSimbolosAmbitos *tabla_ma
 *
 * Busca identificadores cualificados cuando aparecen así en la parte de sentencias (expresiones del tipo <identificador>.<identificador>)
 * Se utiliza cuando se cualifica con el nombre de una clase
-* 
+*
 **/
 int buscarIdIDCualificadoClase(tablaSimbolosClases *t, char * nombre_clase_cualifica, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado){
 	Nodo *nodo;
@@ -440,11 +438,11 @@ int buscarIdIDCualificadoClase(tablaSimbolosClases *t, char * nombre_clase_cuali
 *
 * Busca identificadores cualificados cuando aparecen así en la parte de sentencias (expresiones del tipo <identificador>.<identificador>)
 * Se utiliza cuando se cualifica con el nombre de una instancia
-* 
+*
 **/
 int buscarIdCualificadoInstancia(tablaSimbolosClases *t, tablaSimbolosAmbitos * tabla_main, char * nombre_instancia_cualifica, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado){
-	
-	if (!t || !tabla_main || !nombre_instancia_cualifica || !nombre_id || !nombre_clase_desde || !e || nombre_ambito_encontrado){
+
+	if (!t || !tabla_main || !nombre_instancia_cualifica || !nombre_id || !nombre_clase_desde || !e){
 		return ERROR;
 	}
 	if (buscarIdNoCualificado(t, tabla_main, nombre_instancia_cualifica, nombre_clase_desde, e, nombre_ambito_encontrado) == ERROR){
@@ -464,7 +462,7 @@ int buscarIdCualificadoInstancia(tablaSimbolosClases *t, tablaSimbolosAmbitos * 
 		}
 		return OK;
 	}
-	
+
 	return ERROR;
 }
 
@@ -477,12 +475,12 @@ int buscarIdCualificadoInstancia(tablaSimbolosClases *t, tablaSimbolosAmbitos * 
 *
 * Realiza la búsqueda de identificadores cuando, al declararlos, se intenta insertarlos en la tabla de símbolos
 * Se utiliza cuando se quiere declarar un miembro de clase (ya sea método o atributo)
-* 
+*
 **/
 int buscarParaDeclararMiembroClase(tablaSimbolosClases *t, char * nombre_clase_desde, char * nombre_miembro, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado){
 	Nodo *nodo;
 	tablaSimbolosAmbitos *tsa;
-	if (!t || !nombre_clase_desde || !nombre_miembro || !e || nombre_ambito_encontrado){
+	if (!t || !nombre_clase_desde || !nombre_miembro || !e){
 		return ERROR;
 	}
 	nodo = grafo_find_nodo(t->grafo, nombre_clase_desde);
@@ -494,17 +492,17 @@ int buscarParaDeclararMiembroClase(tablaSimbolosClases *t, char * nombre_clase_d
 		return ERROR;
 	}
 	return buscarTablaSimbolosAmbitosConPrefijos(tsa, nombre_miembro, e, nombre_ambito_encontrado);
- 
+
 }
 /**
 * iniciarTablaSimbolosClases
 *
 * Realiza la búsqueda de identificadores cuando, al declararlos, se intenta insertarlos en la tabla de símbolos
 * Se utiliza cuando se quiere declarar un miembro de instancia
-* 
+*
 **/
 int buscarParaDeclararMiembroInstancia(tablaSimbolosClases *t, char * nombre_clase_desde, char * nombre_miembro, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado){
-  if (!t || !nombre_clase_desde || !nombre_miembro || !e || nombre_ambito_encontrado){
+  if (!t || !nombre_clase_desde || !nombre_miembro || !e){
   	return ERROR;
   }
   if (buscarTablaSimbolosClasesAmbitoActual(t, nombre_clase_desde, nombre_miembro, e, nombre_ambito_encontrado) == OK){
@@ -516,38 +514,39 @@ int buscarParaDeclararMiembroInstancia(tablaSimbolosClases *t, char * nombre_cla
 * buscarTablaSimbolosAmbitoActual
 *
 * Busca el símbolo id en la tabla de símbolos t (especialmente pensada para main)
-* 
+*
 **/
 int buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, char* id, elementoTablaSimbolos ** e, char * id_ambito){
 	NodoHash *n;
 	char aux[1000] = "";
-	
+
 	if (!t || !id){
 		return ERROR;
 	}
 	if(t->idAmbito == GLOBAL){
-		sprintf(aux, "%s_%s", t->nombre_global, id);
+		//sprintf(aux, "%s_%s", t->nombre_global, id);
                 /*strcpy(aux, t->nombre_global);
                 strcpy(aux, "_");
                 strcpy(aux, id);*/
-		n = buscarNodoHash(t->global, aux);
+		n = buscarNodoHash(t->global, id);
 		if(n){
-			*e = nodo_get_ElementoTablaSimbolos(n);	
+			*e = nodo_get_ElementoTablaSimbolos(n);
 			strcpy(id_ambito, t->nombre_global);
 			return OK;
 		}
 		return ERROR;
 	} else if (t->idAmbito == LOCAL){
-		n = buscarNodoHash(t->local, id);
+                sprintf(aux, "%s_%s", t->nombre_local, id);
+		n = buscarNodoHash(t->local, aux);
 		if(!n){
                     sprintf(aux, "%s_%s", t->nombre_global, id);
 			/*strcpy(aux, t->nombre_global);
 			strcpy(aux, "_");
 			strcpy(aux, id);*/
 			n = buscarNodoHash(t->global, aux);
-			
+
 			if(n){
-				*e = nodo_get_ElementoTablaSimbolos(n);	
+				*e = nodo_get_ElementoTablaSimbolos(n);
 				strcpy(id_ambito, t->nombre_global);
 				return OK;
 			}
@@ -556,7 +555,7 @@ int buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, char* id, elemento
 			*e = nodo_get_ElementoTablaSimbolos(n);
 			strcpy(id_ambito, t->nombre_local);
 			return OK;
-		}    	
+		}
 	} else {
     	return ERROR;
 	}
@@ -567,12 +566,12 @@ int buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, char* id, elemento
 * buscarTablaSimbolosClasesAmbitoActual
 *
 * Esta función se utilizará en situaciones similares a la anterior pero cuando se está en un método de una clase
-* 
+*
 **/
 int buscarTablaSimbolosClasesAmbitoActual(tablaSimbolosClases *t, char * nombre_clase, char * nombre_id, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado){
 	Nodo *n;
 	tablaSimbolosAmbitos *tA;
-	if (!t || !nombre_clase || !nombre_id || !e || !nombre_ambito_encontrado){
+	if (!t || !nombre_clase || !nombre_id || !e){
 		return ERROR;
 	}
 	n = grafo_find_nodo(t->grafo, nombre_clase);
@@ -589,10 +588,10 @@ int buscarTablaSimbolosClasesAmbitoActual(tablaSimbolosClases *t, char * nombre_
 * buscarParaDeclararIdTablaSimbolosAmbitos
 *
 * Esta función realiza la busqueda previa a la declaracion de un identificador de cualquier tipo fuera de la jerarquia de clases
-* 
+*
 **/
 int buscarParaDeclararIdTablaSimbolosAmbitos(tablaSimbolosAmbitos *t, char *id, elementoTablaSimbolos **e, char *idAmbito){
-	if (!t || !id || !e || !idAmbito){
+	if (!t || !id ){
 		return ERROR;
 	}
 	if (buscarTablaSimbolosAmbitoActual(t, id, e, idAmbito) == ERROR){
@@ -606,12 +605,12 @@ int buscarParaDeclararIdTablaSimbolosAmbitos(tablaSimbolosAmbitos *t, char *id, 
 * buscarParaDeclararIdLocalEnMetodo
 *
 * Esta función realiza la busqueda previa a la declaracion de un identificador local en un metodo de una clase
-* 
+*
 **/
 int buscarParaDeclararIdLocalEnMetodo(tablaSimbolosClases *t, char *nombre_clase, char *nombre_id, elementoTablaSimbolos **e, char *nombre_ambito_encontrado){
 	tablaSimbolosAmbitos *tsa;
 	Nodo *aux;
-	if (!t || !nombre_clase || !nombre_id || !e || !nombre_ambito_encontrado){
+	if (!t || !nombre_clase || !nombre_id || !e){
 		return ERROR;
 	}
 	aux = grafo_find_nodo(t->grafo, nombre_clase);
@@ -638,7 +637,7 @@ int buscarParaDeclararIdLocalEnMetodo(tablaSimbolosClases *t, char *nombre_clase
 * insertarTablaSimbolosClases
 *
 * Realiza las tareas de inserción de un símbolo en el grafo
-* 
+*
 **/
 int insertarTablaSimbolosClases(tablaSimbolosClases * grafo, char* id_clase,
 					char* id,
@@ -684,7 +683,7 @@ int insertarTablaSimbolosClases(tablaSimbolosClases * grafo, char* id_clase,
 	tA = nodo_get_info(nodo);
 
 	e = nodo_crearElementoTablaSimbolos();
-	
+
 	e = nodo_set_ElementoTablaSimbolos(e, id, clase, categoria, tipo, estructura, direcciones, numero_parametros,
 										numero_variables_locales, posicion_variable_local, posicion_parametro,
 										dimension, tamanio, filas, columnas, capacidad, numero_atributos_clase,
@@ -703,43 +702,30 @@ int insertarTablaSimbolosClases(tablaSimbolosClases * grafo, char* id_clase,
 * insertarTablaSimbolosClases
 *
 * Realiza las tareas de inserción de un símbolo en la TSA
-* 
+*
 **/
 int insertarTablaSimbolosAmbitos(tablaSimbolosAmbitos * tA, char* id_clase, elementoTablaSimbolos *e){
 
-	/*if (!tA || !id_clase || !e){
-		printf("BUENAS");
-		return ERROR;
-	}*/
-	if (!tA){
-		printf("\nNO HAY TA");
+	if (!tA || !id_clase || !e){
+    printf("Error al insertar, algun parametro esta a NULL");
 		return ERROR;
 	}
-	if (!id_clase){
-		printf("\nNO HAY ID CLASE");
-		return ERROR;
-	}
-	if (!e){
-		printf("\nNO HAY ELEM");
-		return ERROR;
-	}
+
 	if (tA->idAmbito == CERRADO){
-		printf("IDIOTA");
+    printf("Error el ambito esta cerrado");
 		return ERROR;
 	}
 	if (tA->idAmbito == GLOBAL){
 		if (insertarNodoHash(tA->global, id_clase, e) == ERROR){
-			printf("MU MAL");
+      printf("Error al insertar el Nodo Hash\n");
 			return ERROR;
 		}
 	}
 	if (tA->idAmbito == LOCAL){
 		if (insertarNodoHash(tA->local, id_clase, e) == ERROR){
-			printf("FATAL");
 			return ERROR;
 		}
 	}
-	printf("GENIAL");
 	return OK;
 }
 
@@ -751,19 +737,19 @@ int insertarTablaSimbolosAmbitos(tablaSimbolosAmbitos * tA, char* id_clase, elem
 * aplicarAccesos
 *
 * Esta función realiza el control de acceso aplicando la política de cualificadores de acceso (hidden, secret y exposed)
-* 
+*
 **/
 int aplicarAccesos(tablaSimbolosClases *t, char * nombre_clase_ambito_actual, char * clase_declaro, elementoTablaSimbolos * pelem){
 	Nodo *n;
 	tablaSimbolosAmbitos *tA;
-	
+
 	if (!t || !nombre_clase_ambito_actual || !clase_declaro || !pelem){
 		return ERROR;
 	}
-	
+
 	if (strcmp(nombre_clase_ambito_actual, "main") == 0){
 		pelem->tipo_acceso = ACCESO_CLASE;
-		
+
 		return OK;
 	}
 	if (pelem->tipo_acceso == ACCESO_HERENCIA){
@@ -795,9 +781,9 @@ int aplicarAccesos(tablaSimbolosClases *t, char * nombre_clase_ambito_actual, ch
 /**
 * tablaSimbolosClasesToDot
 *
-* Esta función genera el fichero que contiene el gráfico en formato dot de la tabla de simbolos de clases 
+* Esta función genera el fichero que contiene el gráfico en formato dot de la tabla de simbolos de clases
 * y que tiene como nombre el nombre de la tabla (con el que se creó) con la extensión .dot.
-* 
+*
 **/
 tablaSimbolosClases * tablaSimbolosClasesToDot(tablaSimbolosClases * grafo){
 	FILE *f;
@@ -805,9 +791,9 @@ tablaSimbolosClases * tablaSimbolosClasesToDot(tablaSimbolosClases * grafo){
 	if (!f){
 		fprintf(stdout, "Error al abrir el archivo");
 	}
-	
-	grafo_print(f, grafo->grafo);
-	
+
+	grafo_print_dot(f, grafo->grafo);
+
 	fclose(f);
 	return grafo;
 }
@@ -817,7 +803,7 @@ tablaSimbolosClases * tablaSimbolosClasesToDot(tablaSimbolosClases * grafo){
 * Esta funcion abre un fichero ensamblador y se escribe el codigo NASM necesario
 * para que contenga la TS y se pueda unir al codigo ensamblador del resto de la
 * generacion para componer la version de bajo nivel que genera nuestro compilador
-* 
+*
 **/
 int tablaSimbolosClasesANasm(tablaSimbolosClases *t){
 	if (!t){

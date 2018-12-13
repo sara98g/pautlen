@@ -8,13 +8,12 @@
 
   extern int yylex();
   extern int yyleng;
-  /*extern tablaSimbolosClases* ts_c;*/
+  extern tablaSimbolosAmbitos *tsa;
 
   extern FILE* yyin;
   extern FILE* salida;
   extern int columna;
   extern int line;
-  /*extern char* idclase;*/
   void yyerror( char *s);
 
   int clase_actual, tipo_actual, tamanio_actual;
@@ -38,6 +37,8 @@
   %type <atributos> lectura
   %type <atributos> escritura
   %type <atributos> condicional
+  %type <atributos> while
+  %type <atributos> while_exp
 
   %token TOK_NONE
   %token TOK_CLASS
@@ -112,8 +113,28 @@ iniciar_codigo: /*vacio*/
 
 escribir_variables: /*vacio*/
         {
-                /*escribirTS(); con cada simbolo -> declaracion variables*/
-                escribir_segmento_codigo(salida); /*La profe pone texto en vez de codigo*/
+          TablaHash *th=NULL;
+        	// NodoHash *n=NULL;
+          // elementoTablaSimbolos *e=NULL;
+          char* clave=NULL;
+          int i;
+          th = tsa->global;
+          for(i=0; i<th->nElem; i++){
+            clave = th->lista[i];
+            // printf("ESTA ES LA CLAVE[%d]: %s\n", i , clave);
+            // n = buscarNodoHash(th, clave);
+            // printf("LA PUTA CLAVE %s\n",n->clave);
+            // if(n == NULL){
+            //   printf("El nodo ha develto NULL\n");
+            // }
+            // e = nodo_get_ElementoTablaSimbolos(n);
+            // if(e == NULL){
+            //   printf("El ELEMNTO ha develto NULL\n");
+            // }
+            // printf("******** %s", e->clave);
+            declarar_variable(salida, clave,  1,  1);
+          }
+            escribir_segmento_codigo(salida);
         };
 
 inicio_main: /*vacio*/
@@ -604,10 +625,9 @@ identificador: TOK_IDENTIFICADOR
         {
                 fprintf(salida, ";R:\tidentificador: TOK_IDENTIFICADOR");
 
-                /*
-                elementoTablaSimbolos * e = NULL;
-                char* ambito;
-                e = nodo_set_ElementoTablaSimbolos(e,
+                char*idAmbito = NULL;
+                elementoTablaSimbolos *elemento = nodo_crearElementoTablaSimbolos();
+                elemento = nodo_set_ElementoTablaSimbolos(elemento,
                                           $1.lexema,
                 													0,
                 													VARIABLE,
@@ -636,54 +656,24 @@ identificador: TOK_IDENTIFICADOR
                 								        	0,
                 								        	0,
                 													NULL);
-                if(buscarTablaSimbolosClasesAmbitoActual(ts_c, idclase, $1.lexema, e, ambito) == ERROR){
-                  fprintf(salida,"Error al insertar en la TS, elemento ya insertado\n");
+
+                elementoTablaSimbolos ** e = NULL;
+                if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, e, idAmbito)==ERROR){
+                  if($1.tipo == BOOLEAN || $1.tipo == ENTERO){
+                    if(insertarTablaSimbolosAmbitos(tsa, $1.lexema,  elemento) == ERROR){
+                      printf("ERROR al insertar en la tsa\n");
+                      exit(-1);
+                    }
+
+                  }
+
+                }
+                else{
+                  printf("ERROR, variable ya declarada\n");
                   exit(-1);
                 }
 
-
-                else{
-                  if($1.tipo == BOOLEAN || $1.tipo==INT){
-                    if(insertarTablaSimbolosClases(ts_c,
-                                            idclase,
-                                            $1.lexema,
-                                            0,
-                                            VARIABLE,
-                                            $1.tipo,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            1,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            NULL) == ERROR){
-                        fprintf(salida, "Error al insertart\n");
-                        exit(-1);
-                      }
-                  }
-                  else{
-                    fprintf(salida, "El elemento a insertar no es de tipo boolean o int\n");
-                    exit(Error);
-                  }
-
-                }*/
+              nodo_free_ElementoTablaSimbolos(elemento);
         }
         /* idf
          guardar[posParam] --> nombreParam = $1.lexema, tipo_Actual*/

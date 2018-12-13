@@ -39,9 +39,15 @@ segment .data
 ; --- Funcion escribir_cabecera .bss---
 segment .bss
 	 __esp resd 1
-	 _x resd 1
-	 _y resd 1
-	 _z resd 1
+
+; ---Funcion declarar_variable---
+	_x resd 1
+
+; ---Funcion declarar_variable---
+	_y resd 1
+
+; ---Funcion declarar_variable---
+	_z resd 1
 
 ; --- Funcion segmento codigo---
 segment .text
@@ -60,7 +66,7 @@ main:
 ; ---Funcion escribir_operando---
 	push dword 2
 ;R:	constante: constante_entera
-;R:	exp: constante
+;R:	exp: constante 
 ;D:	;
 ;R:	asignacion: TOK_IDENTIFICADOR '=' exp
 
@@ -77,7 +83,7 @@ main:
 ; ---Funcion escribir_operando---
 	push dword 1
 ;R:	constante: constante_entera
-;R:	exp: constante
+;R:	exp: constante 
 ;D:	;
 ;R:	asignacion: TOK_IDENTIFICADOR '=' exp
 
@@ -101,7 +107,7 @@ main:
 
 ; ---Funcion escribir_operando---
 	push dword _y
-;R:	comparacion: exp TOK_MENORIGUAL exp
+;R:	comparacion: exp TOK_MENORIGUAL exp 
 
 ;---Funcion mayor_igual---
 	pop dword ecx
@@ -117,7 +123,7 @@ main:
 		mov dword eax, 1
 		push dword eax
 	continua_0:
-;R:	exp:'(' comparacion ')'
+;R:	exp:'(' comparacion ')' 
 ;D:	;
 ;R:	asignacion: TOK_IDENTIFICADOR '=' exp
 

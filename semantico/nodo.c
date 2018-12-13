@@ -260,9 +260,26 @@ int nodo_cmp(const void* nodo1, const void* nodo2){
 }
 
 bool nodo_print(FILE* fp, const void* nodo){
+    Nodo* n = (Nodo*)nodo;
+    Nodo* nodo_aux = NULL;
+    List* list_aux = NULL;
+    register int i;
+    register int tam;
+    
     if (!fp || !nodo)
         return false;
 
-    fprintf(fp, "%s", nodo_get_nombre((Nodo*)nodo));
+    if(!(list_aux = nodo_get_hijos(n)))
+        return false;
+
+    if((tam = linkedList_size(list_aux)) < 0)
+        return false;
+        
+    for(i=0; i<tam; i++){
+		if(!(nodo_aux = linkedList_get(list_aux, i)))
+			return false;
+		fprintf(fp, "\t%s -> %s;\n", nodo_get_nombre(n), nodo_get_nombre(nodo_aux));
+	}
+
     return true;
 }

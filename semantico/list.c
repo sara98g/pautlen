@@ -422,6 +422,23 @@ bool linkedList_print(FILE *fp, const List* l){
     return true;    
 }
 
+bool linkedList_print_alt(FILE *fp, const List* l){
+    NodeList * n = NULL;
+    
+    if(!fp || !l)
+        return false;
+
+    if(linkedList_isEmpty(l) == false){
+    	n = l->node;
+        do{
+            n = n->next;
+            if(l->print_element_function(fp, n->data) == false)
+                return false;
+        }while(n != l->node);   
+    }
+    
+    return true;    
+}
 
 /**************** NODELIST ESTRUCTURE FUNCTIONS **********************/
 

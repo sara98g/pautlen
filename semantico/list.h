@@ -50,6 +50,8 @@ bool linkedList_is_copy(const List* l);
 
 int linkedList_size(const List* l);
 
+bool linkedList_print_alt(FILE *fp, const List* l);
+
 bool linkedList_print(FILE *fd, const List* l);
 
 #endif

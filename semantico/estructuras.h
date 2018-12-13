@@ -27,13 +27,13 @@ struct _tablaSimbolosAmbitos {
     AMBITO idAmbito; /*global=0 o local=1*/
     char *nombre_local;
     char *nombre_global;
- 
+
 };
 
 struct _tablaSimbolosClases {
     Grafo *grafo;
     char *nombre;
-   
+
 };
 
 
@@ -62,7 +62,7 @@ tablaSimbolosAmbitos *iniciarTablaSimbolosAmbitos();
 * destruirTablaSimbolosAmbitos
 *
 * Libera todos los recursos de una tsa creada
-* 
+*
 **/
 void destruirTablaSimbolosAmbitos(tablaSimbolosAmbitos *t);
 /**
@@ -82,7 +82,7 @@ int abrirClaseHeredaN (tablaSimbolosClases* t, char *id_clase, int num_padres, c
 /**
 * cerrarClase
 *
-* Realiza tareas asociadas con el final de la clase identificada 
+* Realiza tareas asociadas con el final de la clase identificada
 * mediante el segundo argumento
 *
 */
@@ -98,9 +98,9 @@ int cerrarTablaSimbolosClases(tablaSimbolosClases* t);
 /**
 * abrirAmbitoPpalMain
 *
-* Realiza tareas asociadas con la apertura del ámbito principal 
+* Realiza tareas asociadas con la apertura del ámbito principal
 * de la tabla de símbolos por ámbitos de main
-* 
+*
 **/
 int abrirAmbitoPpalMain(tablaSimbolosAmbitos* t, char *nombre_ambito);
 /**
@@ -108,15 +108,15 @@ int abrirAmbitoPpalMain(tablaSimbolosAmbitos* t, char *nombre_ambito);
 *
 * Realiza tareas asociadas con la apertura del ámbito asociado
 * con una función global dentro del ámbito main
-* 
+*
 **/
 int abrirAmbitoMain(tablaSimbolosAmbitos * t, char* id_ambito, int categoria_ambito, int tipo_ambito);
 /**
 * cerrarAmbitoMain
 *
-* Realiza tareas asociadas con el cierre del ámbito asociado con una 
+* Realiza tareas asociadas con el cierre del ámbito asociado con una
 * función global dentro del ámbito main, cierra el ámbito actual, de hecho
-* 
+*
 **/
 int cerrarAmbitoMain(tablaSimbolosAmbitos* t);
 /**
@@ -130,7 +130,7 @@ int tablaSimbolosClasesAbrirAmbitoEnClase(tablaSimbolosClases * grafo, char * id
 * tablaSimbolosClasesCerrarAmbitoEnClase
 *
 * Realiza tareas asociadas con el cierre del ámbito asociado con un método
-* 
+*
 **/
 int tablaSimbolosClasesCerrarAmbitoEnClase(tablaSimbolosClases * grafo, char * id_clase);
 
@@ -142,14 +142,14 @@ int tablaSimbolosClasesCerrarAmbitoEnClase(tablaSimbolosClases * grafo, char * i
 * buscarIdEnJerarquiaDesdeClase
 *
 * Busca en la jerarquía de clases (en las tablas tablaAmbitos de cada clase)
-* 
+*
 **/
 int buscarIdEnJerarquiaDesdeClase(tablaSimbolosClases *t, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado);
 /**
 * buscarTablaSimbolosAmbitosConPrefijos
 *
 * Encuentra simbolos por prefijo
-* 
+*
 **/
 int buscarTablaSimbolosAmbitosConPrefijos (tablaSimbolosAmbitos *tA, char *id, elementoTablaSimbolos **e, char *id_ambito);
 /**
@@ -157,7 +157,7 @@ int buscarTablaSimbolosAmbitosConPrefijos (tablaSimbolosAmbitos *tA, char *id, e
 *
 * Se responsabiliza de la búsqueda de un identificador cuando aparece en las sentencias y se quiere usar
 * El identificador no debe ir cualificado
-* 
+*
 **/
 int buscarIdNoCualificado(tablaSimbolosClases *t, tablaSimbolosAmbitos *tabla_main, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado);
 /**
@@ -165,7 +165,7 @@ int buscarIdNoCualificado(tablaSimbolosClases *t, tablaSimbolosAmbitos *tabla_ma
 *
 * Busca identificadores cualificados cuando aparecen así en la parte de sentencias (expresiones del tipo <identificador>.<identificador>)
 * Se utiliza cuando se cualifica con el nombre de una clase
-* 
+*
 **/
 int buscarIdIDCualificadoClase(tablaSimbolosClases *t, char * nombre_clase_cualifica, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado);
 /**
@@ -173,7 +173,7 @@ int buscarIdIDCualificadoClase(tablaSimbolosClases *t, char * nombre_clase_cuali
 *
 * Busca identificadores cualificados cuando aparecen así en la parte de sentencias (expresiones del tipo <identificador>.<identificador>)
 * Se utiliza cuando se cualifica con el nombre de una instancia
-* 
+*
 **/
 int buscarIdCualificadoInstancia(tablaSimbolosClases *t, tablaSimbolosAmbitos * tabla_main, char * nombre_instancia_cualifica, char * nombre_id, char * nombre_clase_desde, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado);
 
@@ -186,7 +186,7 @@ int buscarIdCualificadoInstancia(tablaSimbolosClases *t, tablaSimbolosAmbitos * 
 *
 * Realiza la búsqueda de identificadores cuando, al declararlos, se intenta insertarlos en la tabla de símbolos
 * Se utiliza cuando se quiere declarar un miembro de clase (ya sea método o atributo)
-* 
+*
 **/
 int buscarParaDeclararMiembroClase(tablaSimbolosClases *t, char * nombre_clase_desde, char * nombre_miembro, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado);
 /**
@@ -194,35 +194,35 @@ int buscarParaDeclararMiembroClase(tablaSimbolosClases *t, char * nombre_clase_d
 *
 * Realiza la búsqueda de identificadores cuando, al declararlos, se intenta insertarlos en la tabla de símbolos
 * Se utiliza cuando se quiere declarar un miembro de instancia
-* 
+*
 **/
 int buscarParaDeclararMiembroInstancia(tablaSimbolosClases *t, char * nombre_clase_desde, char * nombre_miembro, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado);
 /**
 * buscarTablaSimbolosAmbitoActual
 *
 * Busca el símbolo id en la tabla de símbolos t (especialmente pensada para main)
-* 
+*
 **/
 int buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, char* id, elementoTablaSimbolos ** e, char * id_ambito);
 /**
 * buscarTablaSimbolosClasesAmbitoActual
 *
 * Esta función se utilizará en situaciones similares a la anterior pero cuando se está en un método de una clase
-* 
+*
 **/
 int buscarTablaSimbolosClasesAmbitoActual(tablaSimbolosClases *t, char * nombre_clase, char * nombre_id, elementoTablaSimbolos ** e, char * nombre_ambito_encontrado);
 /**
 * buscarParaDeclararIdTablaSimbolosAmbitos
 *
 * Esta función realiza la busqueda previa a la declaracion de un identificador de cualquier tipo fuera de la jerarquia de clases
-* 
+*
 **/
 int buscarParaDeclararIdTablaSimbolosAmbitos(tablaSimbolosAmbitos *t, char *id, elementoTablaSimbolos **e, char*idAmbito);
 /**
 * buscarParaDeclararIdLocalEnMetodo
 *
 * Esta función realiza la busqueda previa a la declaracion de un identificador local en un metodo de una clase
-* 
+*
 **/
 int buscarParaDeclararIdLocalEnMetodo(tablaSimbolosClases *t, char *nombre_clase, char *nombre_id, elementoTablaSimbolos **e, char *nombre_ambito_encontrado);
 /********************************************************************/
@@ -233,7 +233,7 @@ int buscarParaDeclararIdLocalEnMetodo(tablaSimbolosClases *t, char *nombre_clase
 * insertarTablaSimbolosClases
 *
 * Realiza las tareas de inserción de un símbolo en el grafo
-* 
+*
 **/
 int insertarTablaSimbolosClases(tablaSimbolosClases * grafo, char* id_clase,
 					char* id,
@@ -269,7 +269,7 @@ int insertarTablaSimbolosClases(tablaSimbolosClases * grafo, char* id_clase,
 * insertarTablaSimbolosClases
 *
 * Realiza las tareas de inserción de un símbolo en la TSA
-* 
+*
 **/
 int insertarTablaSimbolosAmbitos(tablaSimbolosAmbitos * tA, char* id_clase, elementoTablaSimbolos *e);
 
@@ -281,15 +281,15 @@ int insertarTablaSimbolosAmbitos(tablaSimbolosAmbitos * tA, char* id_clase, elem
 * aplicarAccesos
 *
 * Esta función realiza el control de acceso aplicando la política de cualificadores de acceso (hidden, secret y exposed)
-* 
+*
 **/
 int aplicarAccesos(tablaSimbolosClases *t, char * nombre_clase_ambito_actual, char * clase_declaro, elementoTablaSimbolos * pelem);
 /**
 * tablaSimbolosClasesToDot
 *
-* Esta función genera el fichero que contiene el gráfico en formato dot de la tabla de simbolos de clases 
+* Esta función genera el fichero que contiene el gráfico en formato dot de la tabla de simbolos de clases
 * y que tiene como nombre el nombre de la tabla (con el que se creó) con la extensión .dot.
-* 
+*
 **/
 tablaSimbolosClases * tablaSimbolosClasesToDot(tablaSimbolosClases * grafo);
 /**
@@ -298,7 +298,7 @@ tablaSimbolosClases * tablaSimbolosClasesToDot(tablaSimbolosClases * grafo);
 * Esta funcion abre un fichero ensamblador y se escribe el codigo NASM necesario
 * para que contenga la TS y se pueda unir al codigo ensamblador del resto de la
 * generacion para componer la version de bajo nivel que genera nuestro compilador
-* 
+*
 **/
 int tablaSimbolosClasesANasm(tablaSimbolosClases *t);
 
@@ -363,6 +363,6 @@ bool nodo_insert_hijo(Nodo* nodo, Nodo* hijo);
 int nodo_cmp(const void* nodo1, const void* nodo2);
 
 bool nodo_print(FILE* fp, const void* nodo);
-
+bool grafo_print_dot(FILE* fp, Grafo* grafo);
 
 #endif

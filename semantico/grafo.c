@@ -176,3 +176,53 @@ bool grafo_print(FILE* fp, Grafo* grafo){
 	linkedList_print(fp, grafo_get_nodes(grafo));
 	return true;
 }
+bool grafo_print_dot(FILE* fp, Grafo* grafo){
+	register int tam;
+	register int i;
+	List* list_aux = NULL;
+	Nodo* nodo_aux = NULL;
+	tablaSimbolosAmbitos* tablasim_aux = NULL;
+	
+	if(!fp || !grafo)
+		return false;
+
+	fprintf(fp, "digraph clases { rankdir=BT;\n\tedge [arrowhead = normal]\n");
+	
+	if(!(list_aux = grafo_get_nodes(grafo)))
+		return false;
+	if((tam = linkedList_size(list_aux)) < 0)
+		return false;
+		
+	for(i=0; i<tam; i++){
+		if(!(nodo_aux = linkedList_get(list_aux, i)))
+			return false;
+		fprintf(fp, "\t%s [label=\"%s\"][shape=oval];\n", nodo_get_nombre(nodo_aux), nodo_get_nombre(nodo_aux));
+	}
+	
+	if(linkedList_print_alt(fp, grafo_get_raiz(grafo)) == false)
+		return false;
+
+
+	fprintf(fp, "\tedge [arrowhead = empty]");
+
+	for(i=0; i<tam; i++){
+		if(!(nodo_aux = linkedList_get(list_aux, i)))
+			return false;
+
+		tablasim_aux = nodo_get_info(nodo_aux);
+		if(tablasim_aux->local){
+			fprintf(fp, "\t%s [label=\"{%s|", nodo_get_nombre(nodo_aux), nodo_get_nombre(nodo_aux));
+			if(printHashDot(fp, tablasim_aux->local) == false)
+				return false;
+			fprintf(fp, "}\"][shape=record];\n");
+		}
+		if(tablasim_aux->global){
+			fprintf(fp, "\t%s [label=\"{%s|", nodo_get_nombre(nodo_aux), nodo_get_nombre(nodo_aux));
+			if(printHashDot(fp, tablasim_aux->local) == false)
+				return false;
+			fprintf(fp, "}\"][shape=record];\n");
+		}
+	}
+        	
+	return true;
+}
