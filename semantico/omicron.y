@@ -121,9 +121,8 @@ escribir_variables: /*vacio*/
           th = tsa->global;
           for(i=0; i<th->nElem; i++){
             clave = th->lista[i];
-            printf("ESTA ES LA CLAVE[%d]: %s\n", i , clave);
-            n = buscarNodoHash_aux(th, clave);
-            printf("LA PUTA CLAVE %s\n",n->clave);
+            printf("A PARTIR DE AQUI BUSCAMOS LAS VARIABLES---->\n");
+            n = buscarNodoHash(th, clave);
             if(n == NULL){
               printf("El nodo ha develto NULL\n");
             }
@@ -661,6 +660,7 @@ identificador: TOK_IDENTIFICADOR
                 elementoTablaSimbolos ** e = NULL;
                 if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, e, idAmbito)==ERROR){
                   if($1.tipo == BOOLEAN || $1.tipo == ENTERO){
+                    printf("A PARTIR DE AQUI ME IMPORTA--->>>\n");
                     if(insertarTablaSimbolosAmbitos(tsa, $1.lexema,  elemento) == ERROR){
                       printf("ERROR al insertar en la tsa\n");
                       exit(-1);

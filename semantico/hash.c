@@ -245,7 +245,6 @@ NodoHash* crearNodoHash(char *clave, elementoTablaSimbolos *info) {
 	        }
 
     	}
-			printf("CREAR NH: info: %s, %d\n", nh->info->clave, nh->info->tipo );
 
     return nh;
 }
@@ -271,10 +270,10 @@ int insertarNodoHash(TablaHash *th, char *clave, elementoTablaSimbolos *info) {
             return ERROR;
         }
     }
-
+		printf("¡FUNCION HAS EN INSERTAR!\n");
     ind = funcionHash(clave) % th->tam;
+		printf("\n\n\n\n\n");
 	//printf("\t\tInsertar en la posicion: %d\n", ind);
-	printf("INSERTAR NH: %s -- %s ,%d\n", clave, info->clave, info->tipo);
 	if (!(n = crearNodoHash(clave, info))) {
         return ERROR;
     }
@@ -288,21 +287,15 @@ int insertarNodoHash(TablaHash *th, char *clave, elementoTablaSimbolos *info) {
     		n2->siguiente = n;
       }else{
         th->tabla[ind] = n;
-				printf("ind: %d y tamaño: %d--DENTRO DE LA TABLA1: %s -- %s %d\n",ind,th->tam, n->info->clave,th->tabla[ind]->info->clave,th->tabla[ind]->info->tipo );
-
         }
     }else{
 				th->tabla[ind] = (NodoHash*)malloc(sizeof(NodoHash));
       	th->tabla[ind] = n;
-				printf("ind: %d--DENTRO DE LA TABLA22: %s -- %s %d\n",ind, n->info->clave,th->tabla[ind]->info->clave,th->tabla[ind]->info->tipo );
-    }
+				    }
 
     th->lista[th->nElem] = clave;
     th->nElem++;
-
-		printf("INSERTAR NODO FINAL : %s -- %s , %d\n", n->clave, n->info->clave, n->info->tipo);
-
-
+		printf("NODO INSERTADO\n\n");
     return OK;
 }
 
@@ -314,16 +307,13 @@ NodoHash* buscarNodoHash(TablaHash *th, char *clave) {
 
         return NULL;
     }
-		fh = funcionHash(clave)-1;
+
+		printf("¡FUNCION HAS EN BUSCAR!\n");
+		fh = funcionHash(clave);
+		printf("\n\n\n\n\n");
 		//printf("\tFuncion Hash: %d\n", fh);
     ind = fh % th->tam;
-		for( i = 0 ; i< th->nElem ; i++)
-			printf("BUSCAR_NH: tam:%d lista[%d]%s tabla[%d]%s:\n", th->tam,i, th->lista[i],ind, th->tabla[ind]->clave);
-
-
-		printf("BUSCAR_NH ind:%d\n", ind);
-    n = th->tabla[ind];
-		printf("NODO con ind%d -- clave%s\n", ind, n->clave);
+		n = th->tabla[ind];
 	 	if (!n){
         return NULL;
     }
@@ -346,14 +336,8 @@ NodoHash* buscarNodoHash_aux(TablaHash *th, char *clave) {
 		fh = funcionHash(clave);
 		//printf("\tFuncion Hash: %d\n", fh);
     ind = fh % th->tam;
-		for( i = 0 ; i< th->nElem ; i++)
-			printf("AUX***BUSCAR_NH: tam:%d lista[%d]%s tabla[%d]%s:\n", th->tam,i, th->lista[i],ind, th->tabla[ind]->clave);
-
-
-		printf("BUSCAR_NH ind:%d\n", ind);
-    n = th->tabla[ind];
-		printf("NODO con ind%d -- clave%s\n", ind, n->clave);
-	 	if (!n){
+		n = th->tabla[ind];
+		if (!n){
         return NULL;
     }
 
