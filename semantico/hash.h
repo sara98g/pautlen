@@ -96,7 +96,7 @@ typedef struct TablaHash {
 elementoTablaSimbolos * nodo_crearElementoTablaSimbolos();
 int nodo_free_ElementoTablaSimbolos(elementoTablaSimbolos * e);
 elementoTablaSimbolos * nodo_get_ElementoTablaSimbolos(NodoHash *n);
-elementoTablaSimbolos * nodo_set_ElementoTablaSimbolos(elementoTablaSimbolos *e, 
+elementoTablaSimbolos * nodo_set_ElementoTablaSimbolos(elementoTablaSimbolos *e,
 													char* id,
 													int clase,
 													int categoria,
@@ -148,4 +148,6 @@ int insertarNodoHash(TablaHash *th, char *clave, elementoTablaSimbolos *info);
 /*Busca en la tabla hash el nodo identificado por su clave y lo devuelve. NULL en caso contrario.*/
 NodoHash* buscarNodoHash(TablaHash *th, char *clave);
 bool printHashDot(FILE* fp, TablaHash* th);
+NodoHash* buscarNodoHash_aux(TablaHash *th, char *clave);
+
 #endif

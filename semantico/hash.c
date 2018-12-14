@@ -202,6 +202,7 @@ int eliminarTablaHash(TablaHash *th) {
 int funcionHash(char *clave) {
 	int h = HASH_INI;
     char *p = clave;
+		printf("********CLAVE EN LA FUNCION HASH: %s%s***************** \n", clave, p);
 	while(*p != 0){
 		h = h*HASH_FACTOR + *p;
         //printf("\tclave:%s *clave:%d, p:%s, *p:%d, h:%d\n",clave , *clave, p, *p, h);
@@ -215,6 +216,7 @@ int funcionHash(char *clave) {
         printf("\tclave:%s *clave:%d, p:%s, *p:%d, h:%d\n",clave , *clave, p, *p, h);
     }
     */
+		printf("******************RESULTADO DESPUES DEL IND:%d\n", h);
     return h;
 }
 
@@ -233,8 +235,7 @@ NodoHash* crearNodoHash(char *clave, elementoTablaSimbolos *info) {
         strcpy(nh->clave, clave);
         nh->siguiente = NULL;
         if(info){
-
-            nh->info = info;
+						nh->info = info;
 
         } else{
 	    	nh->info = nodo_crearElementoTablaSimbolos();
@@ -244,6 +245,8 @@ NodoHash* crearNodoHash(char *clave, elementoTablaSimbolos *info) {
 	        }
 
     	}
+			printf("CREAR NH: info: %s, %d\n", nh->info->clave, nh->info->tipo );
+
     return nh;
 }
 void destruirNodoHash(NodoHash *nh){
@@ -271,27 +274,33 @@ int insertarNodoHash(TablaHash *th, char *clave, elementoTablaSimbolos *info) {
 
     ind = funcionHash(clave) % th->tam;
 	//printf("\t\tInsertar en la posicion: %d\n", ind);
-
+	printf("INSERTAR NH: %s -- %s ,%d\n", clave, info->clave, info->tipo);
 	if (!(n = crearNodoHash(clave, info))) {
         return ERROR;
     }
 
     if(th->nElem > 0){
-        if(th->tabla[ind]){
-    	n2 = th->tabla[ind];
-    	while(n2->siguiente){
-    		n2 = n2->siguiente;
-    	}
-    	n2->siguiente = n;
-        } else {
-            th->tabla[ind] = n;
-        }
-    } else {
+      if(th->tabla[ind]){
+    		n2 = th->tabla[ind];
+    		while(n2->siguiente){
+    			n2 = n2->siguiente;
+    		}
+    		n2->siguiente = n;
+      }else{
         th->tabla[ind] = n;
+				printf("ind: %d y tamaño: %d--DENTRO DE LA TABLA1: %s -- %s %d\n",ind,th->tam, n->info->clave,th->tabla[ind]->info->clave,th->tabla[ind]->info->tipo );
+
+        }
+    }else{
+				th->tabla[ind] = (NodoHash*)malloc(sizeof(NodoHash));
+      	th->tabla[ind] = n;
+				printf("ind: %d--DENTRO DE LA TABLA22: %s -- %s %d\n",ind, n->info->clave,th->tabla[ind]->info->clave,th->tabla[ind]->info->tipo );
     }
 
     th->lista[th->nElem] = clave;
     th->nElem++;
+
+		printf("INSERTAR NODO FINAL : %s -- %s , %d\n", n->clave, n->info->clave, n->info->tipo);
 
 
     return OK;
@@ -299,17 +308,23 @@ int insertarNodoHash(TablaHash *th, char *clave, elementoTablaSimbolos *info) {
 
 
 NodoHash* buscarNodoHash(TablaHash *th, char *clave) {
-	int ind, fh;
+	int ind, fh,i;
     NodoHash *n;
     if(!th || th->nElem==0){
 
         return NULL;
     }
-	fh = funcionHash(clave);
-	//printf("\tFuncion Hash: %d\n", fh);
+		fh = funcionHash(clave)-1;
+		//printf("\tFuncion Hash: %d\n", fh);
     ind = fh % th->tam;
+		for( i = 0 ; i< th->nElem ; i++)
+			printf("BUSCAR_NH: tam:%d lista[%d]%s tabla[%d]%s:\n", th->tam,i, th->lista[i],ind, th->tabla[ind]->clave);
+
+
+		printf("BUSCAR_NH ind:%d\n", ind);
     n = th->tabla[ind];
-    if (!n){
+		printf("NODO con ind%d -- clave%s\n", ind, n->clave);
+	 	if (!n){
         return NULL;
     }
 
@@ -318,6 +333,39 @@ NodoHash* buscarNodoHash(TablaHash *th, char *clave) {
     }
     return n;
 }
+
+/*MMMMAAAAAAAAAAAAAAAAAAZO TURBIOOOOOOOOOOOO*/
+
+NodoHash* buscarNodoHash_aux(TablaHash *th, char *clave) {
+	int ind, fh,i;
+    NodoHash *n;
+    if(!th || th->nElem==0){
+
+        return NULL;
+    }
+		fh = funcionHash(clave);
+		//printf("\tFuncion Hash: %d\n", fh);
+    ind = fh % th->tam;
+		for( i = 0 ; i< th->nElem ; i++)
+			printf("AUX***BUSCAR_NH: tam:%d lista[%d]%s tabla[%d]%s:\n", th->tam,i, th->lista[i],ind, th->tabla[ind]->clave);
+
+
+		printf("BUSCAR_NH ind:%d\n", ind);
+    n = th->tabla[ind];
+		printf("NODO con ind%d -- clave%s\n", ind, n->clave);
+	 	if (!n){
+        return NULL;
+    }
+
+    while (n && (!n->info || strcmp(n->clave, clave))) {
+        n = n->siguiente;
+    }
+    return n;
+}
+
+
+
+/********************************************/
 bool printHashDot(FILE* fp, TablaHash* th){
 	register int i;
 	register int tam;

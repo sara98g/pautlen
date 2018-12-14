@@ -114,24 +114,24 @@ iniciar_codigo: /*vacio*/
 escribir_variables: /*vacio*/
         {
           TablaHash *th=NULL;
-        	// NodoHash *n=NULL;
-          // elementoTablaSimbolos *e=NULL;
+        	 NodoHash *n=NULL;
+           elementoTablaSimbolos *e=NULL;
           char* clave=NULL;
           int i;
           th = tsa->global;
           for(i=0; i<th->nElem; i++){
             clave = th->lista[i];
-            // printf("ESTA ES LA CLAVE[%d]: %s\n", i , clave);
-            // n = buscarNodoHash(th, clave);
-            // printf("LA PUTA CLAVE %s\n",n->clave);
-            // if(n == NULL){
-            //   printf("El nodo ha develto NULL\n");
-            // }
-            // e = nodo_get_ElementoTablaSimbolos(n);
-            // if(e == NULL){
-            //   printf("El ELEMNTO ha develto NULL\n");
-            // }
-            // printf("******** %s", e->clave);
+            printf("ESTA ES LA CLAVE[%d]: %s\n", i , clave);
+            n = buscarNodoHash_aux(th, clave);
+            printf("LA PUTA CLAVE %s\n",n->clave);
+            if(n == NULL){
+              printf("El nodo ha develto NULL\n");
+            }
+            e = nodo_get_ElementoTablaSimbolos(n);
+            if(e == NULL){
+              printf("El ELEMNTO ha develto NULL\n");
+            }
+            printf("******** %s", e->clave);
             declarar_variable(salida, clave,  1,  1);
           }
             escribir_segmento_codigo(salida);
@@ -299,6 +299,7 @@ bloque: condicional {fprintf(salida,";R:\tbloque: condicional\n");}
 
 asignacion: TOK_IDENTIFICADOR '=' exp {
                 fprintf(salida,";R:\tasignacion: TOK_IDENTIFICADOR '=' exp\n");
+                //if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $3.lexema, e, idAmbito)==ERROR)
                 //elementoTablaSimbolos * e = NULL;
                 // buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, ,e, GLOBAL)
                 //Buscar_TS --> e
