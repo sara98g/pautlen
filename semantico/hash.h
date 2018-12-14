@@ -148,6 +148,5 @@ int insertarNodoHash(TablaHash *th, char *clave, elementoTablaSimbolos *info);
 /*Busca en la tabla hash el nodo identificado por su clave y lo devuelve. NULL en caso contrario.*/
 NodoHash* buscarNodoHash(TablaHash *th, char *clave);
 bool printHashDot(FILE* fp, TablaHash* th);
-NodoHash* buscarNodoHash_aux(TablaHash *th, char *clave);
 
 #endif

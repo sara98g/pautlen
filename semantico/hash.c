@@ -324,32 +324,7 @@ NodoHash* buscarNodoHash(TablaHash *th, char *clave) {
     return n;
 }
 
-/*MMMMAAAAAAAAAAAAAAAAAAZO TURBIOOOOOOOOOOOO*/
 
-NodoHash* buscarNodoHash_aux(TablaHash *th, char *clave) {
-	int ind, fh,i;
-    NodoHash *n;
-    if(!th || th->nElem==0){
-
-        return NULL;
-    }
-		fh = funcionHash(clave);
-		//printf("\tFuncion Hash: %d\n", fh);
-    ind = fh % th->tam;
-		n = th->tabla[ind];
-		if (!n){
-        return NULL;
-    }
-
-    while (n && (!n->info || strcmp(n->clave, clave))) {
-        n = n->siguiente;
-    }
-    return n;
-}
-
-
-
-/********************************************/
 bool printHashDot(FILE* fp, TablaHash* th){
 	register int i;
 	register int tam;
