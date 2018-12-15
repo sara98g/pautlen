@@ -365,3 +365,17 @@ void escribir(FILE* fpasm, int es_variable, int tipo){
     fprintf(fpasm, "\tadd esp, 4\n");
 	fprintf(fpasm, "\tcall print_endofline\n");
 }
+
+void if_then_ini(FILE * fpasm, int etiqueta ){
+  fprintf(fpasm, "\n;---Funcion if---\n");
+  fprintf(fpasm,"\tpop eax\n");
+  fprintf(fpasm,"\tmov eax , [eax]\n");
+  fprintf(fpasm,"\tcmp eax, 0\n");
+  fprintf(fpasm,"\tje near fin_si%d\n",etiqueta );
+
+}
+
+void if_then_fin(FILE* fpasm,int etiqueta){
+  fprintf(fpasm, "\n;---Funcion fin if---\n");
+  fprintf(fpasm,"fin_si%d:\n", etiqueta);
+}

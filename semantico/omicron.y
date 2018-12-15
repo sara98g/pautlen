@@ -121,7 +121,6 @@ escribir_variables: /*vacio*/
           th = tsa->global;
           for(i=0; i<th->nElem; i++){
             clave = th->lista[i];
-            printf("A PARTIR DE AQUI BUSCAMOS LAS VARIABLES---->\n");
             n = buscarNodoHash(th, clave);
             if(n == NULL){
               printf("El nodo ha develto NULL\n");
@@ -130,7 +129,6 @@ escribir_variables: /*vacio*/
             if(e == NULL){
               printf("El ELEMNTO ha develto NULL\n");
             }
-            printf("******** %s", e->clave);
             declarar_variable(salida, clave,  1,  1);
           }
             escribir_segmento_codigo(salida);
@@ -292,7 +290,10 @@ sentencia_simple: asignacion {fprintf(salida,";R:\tsentencia_simple: asignacion\
 destruir_objeto: TOK_DISCARD TOK_IDENTIFICADOR {fprintf(salida,";R:\tdestruir_objeto: TOK_DISCARD TOK_IDENTIFICADOR \n");}
         ;
 
-bloque: condicional {fprintf(salida,";R:\tbloque: condicional\n");}
+bloque: condicional {
+        fprintf(salida,";R:\tbloque: condicional\n");
+        fprintf(stdout,"EN EL BLOQUE CONDICIONAL\n");
+      }
         | bucle{fprintf(salida,";R:\tbloque: bucle\n");}
         ;
 
@@ -318,14 +319,28 @@ elemento_vector: TOK_IDENTIFICADOR '[' exp ']' {
               }
         ;
 
-condicional: if_exp ')' '{' sentencias '}' {fprintf(salida,";R:\tcondicional: TOK_IF '(' exp ')' '{' sentencias '}' \n");}
+condicional: if_exp inicio_if sentencias '}' fin_if{
+        fprintf(salida,";R:\tcondicional: TOK_IF '(' exp ')' '{' sentencias '}' \n");
+        printf("PRIMER MENSAJE\n");
+      }
         |    if_exp ')' '{' sentencias '}' TOK_ELSE '{' sentencias '}'{fprintf(salida,";R:\tcondicional: TOK_IF '(' exp ')' '{' sentencias '}' TOK_ELSE '{' sentencias '}' \n");}
         ;
+inicio_if: /*vacio*/{
+    if_then_ini(salida, etiqueta_global++);
+}
+fin_if: /*vacio*/{
+    if_then_fin(salida, etiqueta_global++);
+}
 
-if_exp : TOK_IF '(' exp {
+if_exp : TOK_IF '(' exp ')' '{' {
+    fprintf(salida,";R:\tif_exp: TOK_IF '(' exp \n");
+    printf("EL TIPO DE LA EXP: %d\n", $3.tipo);
     if($3.tipo != BOOLEAN){
-      fprintf(stdout, "ERROR, IF_ELSE distinto de booleano\n" );
+      printf("Error tipo distinto de BOOLEAN\n");
     }
+    etiqueta_global++;
+    if_then_ini(salida, etiqueta_global);
+
 };
 
 bucle: while_exp sentencias '}'{
@@ -466,7 +481,11 @@ exp:    exp '+' exp {
                 $$.es_direccion = $1.es_direccion;
         }
         | '(' exp ')'  {fprintf(salida,";R:\texp:'(' exp ')' \n");}
-        | '(' comparacion ')'  {fprintf(salida,";R:\texp:'(' comparacion ')' \n");}
+        | '(' comparacion ')'  {
+            fprintf(salida,";R:\texp:'(' comparacion ')' \n");
+            printf("DENTRO DE LA COMPARACION EL TIPO: %d\n", $2.tipo);
+            $$.tipo = $2.tipo;
+          }
         | elemento_vector  {fprintf(salida,";R:\texp: elemento_vector");}
         | TOK_IDENTIFICADOR '(' lista_expresiones ')' {fprintf(salida,";R:\texp: TOK_IDENTIFICADOR '(' lista_expresiones ')' \n");}
         | identificador_clase TOK_IDENTIFICADOR '(' lista_expresiones ')' {fprintf(salida,";R:\texp: identificador_clase TOK_IDENTIFICADOR '(' lista_expresiones ')' \n");}
@@ -495,6 +514,8 @@ resto_lista_expresiones: ',' exp resto_lista_expresiones {fprintf(salida,";R:\tl
 
 comparacion: exp TOK_IGUAL exp {
               fprintf(salida,";R:\tcomparacion: exp TOK_IGUAL exp \n");
+              printf("LLEGAMOS AL MENOR IGUAL\n");
+
               if($1.tipo == $3.tipo){
                 //con la ts hay qu ver si son variables
                 igual(salida, 1, 1, etiqueta_global++);
@@ -523,7 +544,6 @@ comparacion: exp TOK_IGUAL exp {
               //esto es provisional
               $1.tipo=ENTERO;
               $3.tipo=ENTERO;
-
               if($1.tipo == $3.tipo && $1.tipo==ENTERO){
                 //con la ts hay qu ver si son variables
                 menor_igual(salida, 1, 1, etiqueta_global++);
@@ -660,7 +680,6 @@ identificador: TOK_IDENTIFICADOR
                 elementoTablaSimbolos ** e = NULL;
                 if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, e, idAmbito)==ERROR){
                   if($1.tipo == BOOLEAN || $1.tipo == ENTERO){
-                    printf("A PARTIR DE AQUI ME IMPORTA--->>>\n");
                     if(insertarTablaSimbolosAmbitos(tsa, $1.lexema,  elemento) == ERROR){
                       printf("ERROR al insertar en la tsa\n");
                       exit(-1);

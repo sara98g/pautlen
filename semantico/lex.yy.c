@@ -948,83 +948,86 @@ YY_RULE_SETUP
 case 18:
 YY_RULE_SETUP
 #line 82 "omicron.l"
-{fprintf(salida,";D:\t%s\n",yytext);
+{
+					fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
-					return TOK_IF;}
+
+					return TOK_IF;
+				}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 85 "omicron.l"
+#line 88 "omicron.l"
 {fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
 					return TOK_ELSE;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 88 "omicron.l"
+#line 91 "omicron.l"
 {fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
 					return TOK_WHILE;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 91 "omicron.l"
+#line 94 "omicron.l"
 {fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
 					return TOK_SCANF;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 94 "omicron.l"
+#line 97 "omicron.l"
 {fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
 					return TOK_PRINTF;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 98 "omicron.l"
+#line 101 "omicron.l"
 {fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
 					return TOK_IGUAL;}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 101 "omicron.l"
+#line 104 "omicron.l"
 {fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
 					return TOK_DISTINTO;}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 104 "omicron.l"
+#line 107 "omicron.l"
 {fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
 					return TOK_MENORIGUAL;}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 107 "omicron.l"
+#line 110 "omicron.l"
 {fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
 					return TOK_MAYORIGUAL;}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 110 "omicron.l"
+#line 113 "omicron.l"
 {fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
 					return TOK_OR;}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 113 "omicron.l"
+#line 116 "omicron.l"
 {fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
 					return TOK_AND;}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 117 "omicron.l"
+#line 120 "omicron.l"
 {fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
 					//strcpy(yylval.atributos.lexema,yytext);
@@ -1033,21 +1036,21 @@ YY_RULE_SETUP
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 122 "omicron.l"
+#line 125 "omicron.l"
 {fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
 					return TOK_FALSE;}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 125 "omicron.l"
+#line 128 "omicron.l"
 {fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
 					return TOK_TRUE;}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 130 "omicron.l"
+#line 133 "omicron.l"
 {
 	if (yyleng > MAX_LONG_ID){
 		printf("ERROR MORFOLÓGICO: %d>:%d :IDENTIFICADOR DEMASIADO LARGO (<%s>)\n", line, columna, yytext);
@@ -1068,34 +1071,34 @@ YY_RULE_SETUP
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 148 "omicron.l"
+#line 151 "omicron.l"
 {fprintf(salida,";D:\t%s\n",yytext); columna += yyleng; return yytext[0];}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 149 "omicron.l"
+#line 152 "omicron.l"
 {columna++;}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 150 "omicron.l"
+#line 153 "omicron.l"
 {columna++;}
 	YY_BREAK
 case 36:
 /* rule 36 can match eol */
 YY_RULE_SETUP
-#line 151 "omicron.l"
+#line 154 "omicron.l"
 {columna = 1; line++;}
 	YY_BREAK
 case 37:
 /* rule 37 can match eol */
 YY_RULE_SETUP
-#line 152 "omicron.l"
+#line 155 "omicron.l"
 {columna = 1; line++;}
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 154 "omicron.l"
+#line 157 "omicron.l"
 {fprintf(salida,";D:\t%s\n",yytext);
 			printf("ERROR MORFOLÓGICO: %d:%d :CARÁCTER INVÁLIDO (%s)\n", line, columna, yytext);
 			columna += yyleng;
@@ -1103,10 +1106,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 161 "omicron.l"
+#line 164 "omicron.l"
 ECHO;
 	YY_BREAK
-#line 1110 "lex.yy.c"
+#line 1113 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2111,6 +2114,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 161 "omicron.l"
+#line 164 "omicron.l"
 
 

@@ -79,9 +79,12 @@ boolean     {fprintf(salida,";D:\t%s\n",yytext);
 array       {fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
 					return TOK_ARRAY;}
-if          {fprintf(salida,";D:\t%s\n",yytext);
+if          {
+					fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
-					return TOK_IF;}
+
+					return TOK_IF;
+				}
 else        {fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
 					return TOK_ELSE;}

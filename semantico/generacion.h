@@ -153,6 +153,8 @@ void declararFuncion(FILE * fd_s, char * nombre_funcion, int num_var_loc);
 void retornarFuncion(FILE * fd_s, int es_variable);
 void escribirParametro(FILE* fpasm, int pos_parametro, int num_total_parametros);
 void escribirVariableLocal(FILE* fpasm, int posicion_variable_local);
+void if_then_ini(FILE * fpasm, int etiqueta );
+void if_then_fin(FILE* fpasm,int etiqueta);
 
 
 #endif

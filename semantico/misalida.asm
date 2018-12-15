@@ -94,36 +94,13 @@ main:
 ;R:	sentencia: sentencia_simple ';'
 ;D:	z
 ;D:	=
-;D:	(
-;D:	x
-;D:	<=
-;R:	exp: TOK_IDENTIFICADOR
+;D:	5
+;R:	constante_entera: TOK_CONSTANTE_ENTERA
 
 ; ---Funcion escribir_operando---
-	push dword _x
-;D:	y
-;D:	)
-;R:	exp: TOK_IDENTIFICADOR
-
-; ---Funcion escribir_operando---
-	push dword _y
-;R:	comparacion: exp TOK_MENORIGUAL exp 
-
-;---Funcion mayor_igual---
-	pop dword ecx
-	pop dword eax
-	mov dword eax, [eax]
-	mov dword dword ecx, [ecx]
-	cmp eax, ecx
-	jle near true_0
-	mov dword eax, 0
-	push dword eax
-	jmp near continua_0
-	true_0:
-		mov dword eax, 1
-		push dword eax
-	continua_0:
-;R:	exp:'(' comparacion ')' 
+	push dword 5
+;R:	constante: constante_entera
+;R:	exp: constante 
 ;D:	;
 ;R:	asignacion: TOK_IDENTIFICADOR '=' exp
 
@@ -132,30 +109,14 @@ main:
 	mov dword [_z], eax
 ;R:	sentencia_simple: asignacion
 ;R:	sentencia: sentencia_simple ';'
-;D:	printf
-;D:	z
-;D:	;
+;D:	if
+;D:	(
+;D:	x
+;D:	<
 ;R:	exp: TOK_IDENTIFICADOR
 
 ; ---Funcion escribir_operando---
-	push dword _z
-;R:	escritura: TOK_PRINTF exp
-
-;---Funcion escribir---
-	pop dword eax
-	mov dword eax, [eax]
-	push dword eax
-	call print_int
-	add esp, 4
-	call print_endofline
-;R:	sentencia_simple: escritura
-;R:	sentencia: sentencia_simple ';'
-;D:	}
-;R:	sentencias: sentencia
-;R:	sentencias: sentencia sentencias
-;R:	sentencias: sentencia sentencias
-;R:	sentencias: sentencia sentencias
-;R:	programa: TOK_MAIN '{' declaraciones funciones sentencias '}'
+	push dword _x
 
 ; ---Funcion fin---
 	jmp near fin

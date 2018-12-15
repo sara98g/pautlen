@@ -202,7 +202,7 @@ int eliminarTablaHash(TablaHash *th) {
 int funcionHash(char *clave) {
 	int h = HASH_INI;
     char *p = clave;
-		printf("********CLAVE EN LA FUNCION HASH: %s%s***************** \n", clave, p);
+
 	while(*p != 0){
 		h = h*HASH_FACTOR + *p;
         //printf("\tclave:%s *clave:%d, p:%s, *p:%d, h:%d\n",clave , *clave, p, *p, h);
@@ -216,8 +216,7 @@ int funcionHash(char *clave) {
         printf("\tclave:%s *clave:%d, p:%s, *p:%d, h:%d\n",clave , *clave, p, *p, h);
     }
     */
-		printf("******************RESULTADO DESPUES DEL IND:%d\n", h);
-    return h;
+		return h;
 }
 
 
@@ -270,9 +269,8 @@ int insertarNodoHash(TablaHash *th, char *clave, elementoTablaSimbolos *info) {
             return ERROR;
         }
     }
-		printf("¡FUNCION HAS EN INSERTAR!\n");
-    ind = funcionHash(clave) % th->tam;
-		printf("\n\n\n\n\n");
+		ind = funcionHash(clave) % th->tam;
+
 	//printf("\t\tInsertar en la posicion: %d\n", ind);
 	if (!(n = crearNodoHash(clave, info))) {
         return ERROR;
@@ -295,22 +293,20 @@ int insertarNodoHash(TablaHash *th, char *clave, elementoTablaSimbolos *info) {
 
     th->lista[th->nElem] = clave;
     th->nElem++;
-		printf("NODO INSERTADO\n\n");
-    return OK;
+		return OK;
 }
 
 
 NodoHash* buscarNodoHash(TablaHash *th, char *clave) {
-	int ind, fh,i;
+	int ind, fh;
     NodoHash *n;
     if(!th || th->nElem==0){
 
         return NULL;
     }
 
-		printf("¡FUNCION HAS EN BUSCAR!\n");
 		fh = funcionHash(clave);
-		printf("\n\n\n\n\n");
+
 		//printf("\tFuncion Hash: %d\n", fh);
     ind = fh % th->tam;
 		n = th->tabla[ind];

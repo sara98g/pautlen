@@ -716,8 +716,7 @@ int insertarTablaSimbolosAmbitos(tablaSimbolosAmbitos * tA, char* id_clase, elem
 		return ERROR;
 	}
 	if (tA->idAmbito == GLOBAL){
-    printf("INSERTAR_TSA: %s -- %s, %d\n",id_clase, e->clave, e->tipo);
-		if (insertarNodoHash(tA->global, id_clase, e) == ERROR){
+    if (insertarNodoHash(tA->global, id_clase, e) == ERROR){
       printf("Error al insertar el Nodo Hash\n");
 			return ERROR;
 		}
