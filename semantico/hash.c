@@ -43,9 +43,12 @@ int nodo_free_ElementoTablaSimbolos(elementoTablaSimbolos * e){
 }
 
 elementoTablaSimbolos * nodo_get_ElementoTablaSimbolos(NodoHash *n){
-    if (!n){
+	printf("FUNCION N_GETELEM");
+
+		if (!n){
         return NULL;
     }
+		printf("FUNCION N_GETELEM, %s", n->info);
     return n->info;
 }
 

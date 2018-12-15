@@ -517,7 +517,8 @@ int buscarParaDeclararMiembroInstancia(tablaSimbolosClases *t, char * nombre_cla
 *
 **/
 int buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, char* id, elementoTablaSimbolos ** e, char * id_ambito){
-	NodoHash *n;
+printf("SE METE EN BUSCARTS_ACTUAL-520\n");
+  NodoHash *n;
 	char aux[1000] = "";
 
 	if (!t || !id){
@@ -528,9 +529,14 @@ int buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, char* id, elemento
                 /*strcpy(aux, t->nombre_global);
                 strcpy(aux, "_");
                 strcpy(aux, id);*/
+    printf("AMBITO GLOBAL\n");
+
 		n = buscarNodoHash(t->global, id);
 		if(n){
+      printf("NECUNTRA EN L NODO\n");
+
 			*e = nodo_get_ElementoTablaSimbolos(n);
+      printf("NO PASA DE LA FUN");
 			strcpy(id_ambito, t->nombre_global);
 			return OK;
 		}
