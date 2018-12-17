@@ -16,11 +16,11 @@
   extern int line;
   void yyerror( char *s);
 
-  int clase_actual, tipo_actual, tamanio_vector_actual, tamanio_actual;
+  int clase_actual, tipo_actual, tamanio_vector_actual, tamanio_actual,es_variable1, es_variable2;
   int etiqueta_global = 0;
 
-  char*idAmbito = NULL;
-  elementoTablaSimbolos ** e = NULL;
+  char idAmbito[64];
+  elementoTablaSimbolos * e = NULL;
 
 
 
@@ -34,6 +34,7 @@
   %token <atributos> TOK_CONSTANTE_ENTERA
 
   %type <atributos> exp
+  %type <atributos> elemento_vector
   %type <atributos> comparacion
   %type <atributos> constante
   %type <atributos> constante_entera
@@ -105,7 +106,7 @@
 %%
 
 programa:  TOK_MAIN '{' declaraciones iniciar_codigo escribir_variables funciones inicio_main sentencias '}' {fprintf(salida,";R:\tprograma: TOK_MAIN '{' declaraciones funciones sentencias '}'\n"); escribir_fin(salida);} /*REVISAR CON LA TABLA DE SIMBOLOS*/
-        | TOK_MAIN '{' funciones sentencias '}' {fprintf(salida,";R:\tprograma: TOK_MAIN '{' funciones sentencias '}'\n");}
+        | TOK_MAIN '{' funciones sentencias '}' {fprintf(salida,";R:\tprograma: TOK_MAIN '{' funciones sentencias '}'\n"); escribir_fin(salida);}
         ;
 
 /*REVISAR CON LA TABLA DE SIMBOLOS*/
@@ -189,6 +190,7 @@ clase_objeto: '{' TOK_IDENTIFICADOR '}' {fprintf(salida,";R:\tclase_objeto: '{' 
 clase_vector: TOK_ARRAY tipo '[' constante_entera ']' {
               fprintf(salida,";R:\tclase_vector: TOK_ARRAY tipo '[' constante_entera ']'\n");
               tamanio_vector_actual = $4.valor_entero;
+              clase_actual = VECTOR;
               if ((tamanio_vector_actual <1) || (tamanio_vector_actual > 64))
                 printf("ERROR SEMANTICO: %d:%d - Tamaño vector demasiado grande\n",line, columna-yyleng);
                 exit(-1);
@@ -302,16 +304,31 @@ bloque: condicional {
 
 asignacion: TOK_IDENTIFICADOR '=' exp {
                 fprintf(salida,";R:\tasignacion: TOK_IDENTIFICADOR '=' exp\n");
-                //if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $3.lexema, e, idAmbito)==ERROR)
-                //elementoTablaSimbolos * e = NULL;
-                // buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, ,e, GLOBAL)
-                //Buscar_TS --> e
-                //if e.tipo == $3.tipo
-                $1.tipo=$3.tipo;
-                //hay que ver si es variable o no
-                asignar(salida, $1.lexema, 0);
-}
-        | elemento_vector '=' exp {fprintf(salida,";R:\tasignacion: elemento_vector '=' exp\n");}
+                if ($1.tipo == $3.tipo){
+                  if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $3.lexema, &e, idAmbito)==ERROR){
+                    asignar(salida, $1.lexema, 0);
+                  }else{
+                    asignar(salida, $1.lexema, 1);
+                  }
+                }else{
+                  printf("ERROR SEMANTICO: %d:%d No se puede asignar dos objetos de diferentes tipos\n", line, columna );
+                  exit(-1);
+                }
+
+                }
+        | elemento_vector '=' exp {
+              fprintf(salida,";R:\tasignacion: elemento_vector '=' exp\n");
+              if ($1.tipo == $3.tipo){
+                if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $3.lexema, &e, idAmbito)==ERROR){
+                  asignar(salida, $1.lexema, 0);
+                }else{
+                  asignar(salida, $1.lexema, 1);
+                }
+              }else{
+                printf("ERROR SEMANTICO: %d:%d No se puede asignar dos objetos de diferentes tipos\n", line, columna );
+                exit(-1);
+              }
+            }
         | elemento_vector '=' TOK_INSTANCE_OF TOK_IDENTIFICADOR '(' lista_expresiones ')' {fprintf(salida,";R:\tasignacion: TOK_IDENTIFICADOR '=' TOK_INSTANCE_OF TOK_IDENTIFICADOR '(' lista_expresiones ')'\n");}
         | TOK_IDENTIFICADOR '=' TOK_INSTANCE_OF TOK_IDENTIFICADOR '(' lista_expresiones ')' {fprintf(salida,";R:\tTOK_IDENTIFICADOR '=' TOK_INSTANCE_OF TOK_IDENTIFICADOR '(' lista_expresiones ')'\n");}
         | identificador_clase '.' TOK_IDENTIFICADOR '=' exp {fprintf(salida,";R:\tasignacion: identificador_clase '.' TOK_IDENTIFICADOR '=' exp \n");}
@@ -363,15 +380,43 @@ while: TOK_WHILE '('{
     $$.etiqueta = etiqueta_global++;
 };
 
-lectura: TOK_SCANF TOK_IDENTIFICADOR {fprintf(salida,";R:\tlectura: TOK_SCANF TOK_IDENTIFICADOR  \n");
-        leer(salida, $2.lexema, ENTERO);
+lectura: TOK_SCANF TOK_IDENTIFICADOR {
+            fprintf(salida,";R:\tlectura: TOK_SCANF TOK_IDENTIFICADOR  \n");
+            if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $2.lexema, &e, idAmbito)==ERROR){
+              printf("ERROR SEMANTICO: %d:%d - no se puede leer el identificador %s (no existe)\n", line, columna-yyleng, $2.lexema);
+              exit(-1);
+            }
+            if(e->clase == VECTOR || e->categoria == FUNCION){
+              printf("ERROR SEMANTICO: %d:%d - no se pueden leer funciones ni vectores\n", line, columna-yyleng);
+              exit(-1);
+            }
+            //******preguntar profe
+            // if(e->categoria == VARIABLE){
+            //   if(e->ambito=GLOBAL){
+            //
+            //   }
+            //   else{
+            //
+            //   }
+            // }
+
+            if(e->tipo == ENTERO)
+              leer(salida, $2.lexema, ENTERO);
+            else
+              leer(salida, $2.lexema, BOOLEAN);
+
         }
         | TOK_SCANF elemento_vector {fprintf(salida,";R:\tlectura: TOK_SCANF elemento_vector \n");}
         ;
 
 escritura: TOK_PRINTF exp  {
                 fprintf(salida,";R:\tescritura: TOK_PRINTF exp\n");
-                escribir(salida, $2.es_direccion, $2.tipo);
+                if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $2.lexema, &e, idAmbito)==ERROR){
+                  es_variable1 = 0;
+                }
+                else
+                  es_variable1 =1;
+                escribir(salida, es_variable1, $2.tipo);
         }
         ;
 
@@ -379,16 +424,26 @@ retorno_funcion: TOK_RETURN exp {fprintf(salida,";R:\tretorno_funcion: TOK_RETUR
         | TOK_RETURN TOK_NONE {fprintf(salida,";R:\tretorno_funcion: TOK_RETURN TOK_NONE\n");}
         ;
 exp:    exp '+' exp {
+
               fprintf(salida,";R:\texp: exp '+' exp \n");
               if($1.tipo != ENTERO || $3.tipo!= ENTERO ){
                 fprintf(stdout, "ERROR, no se pueden sumar cosas diferentes a enteros\n" );
                 exit(-1);
               }
-              fprintf(stdout, "entra en la funcion de sumar\n");
-              //con la tabla de simbolos habria que ver si es variable o no, de momento generalazmaos a siempre variable
+              if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
+                es_variable1 = 0;
+              }else{
+                es_variable1=1;
+              }
+              if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $3.lexema, &e, idAmbito)==ERROR){
+                es_variable2 = 0;
+              }else{
+                es_variable2=1;
+              }
 
-              sumar(salida,1,1);
+              sumar(salida,es_variable1,es_variable2);
               $$.tipo = $1.tipo;
+              sprintf($$.lexema, "suma+");
             }
         | exp '-' exp {
               fprintf(salida,";R:\texp: exp '-' exp \n");
@@ -396,10 +451,21 @@ exp:    exp '+' exp {
                 fprintf(stdout, "ERROR, no se pueden restar cosas diferentes a enteros\n" );
                 exit(-1);
               }
-              //con la tabla de simbolos habria que ver si es variable o no, de momento generalazmaos a siempre variable
+              if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
+                  es_variable1 = 0;
+              }else{
+                  es_variable1=1;
+              }
+              if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $3.lexema, &e, idAmbito)==ERROR){
+                  es_variable2 = 0;
+              }else{
+                  es_variable2=1;
+              }
 
-              restar(salida,1,1);
-              $$.tipo = $1.tipo;
+                restar(salida,es_variable1,es_variable2);
+                $$.tipo = $1.tipo;
+                sprintf($$.lexema, "resta-");
+
             }
         | exp '/' exp {
               fprintf(salida,";R:\texp: exp '/' exp \n");
@@ -407,24 +473,58 @@ exp:    exp '+' exp {
                 fprintf(stdout, "ERROR, no se pueden dividir cosas diferentes a enteros\n" );
                 exit(-1);
               }
-              //con la tabla de simbolos habria que ver si es variable o no, de momento generalazmaos a siempre variable
+              if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
+                  es_variable1 = 0;
+              }else{
+                  es_variable1=1;
+              }
+              if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $3.lexema, &e, idAmbito)==ERROR){
+                  es_variable2 = 0;
+              }else{
+                  es_variable2=1;
+              }
 
-              dividir(salida,1,1);
-              $$.tipo = $1.tipo;
+                dividir(salida,es_variable1,es_variable2);
+                $$.tipo = $1.tipo;
+                sprintf($$.lexema, "division/");
             }
         | exp '*' exp  {
               fprintf(salida,";R:\texp: exp '*' exp \n");
               if($1.tipo != ENTERO || $3.tipo!= ENTERO ){
                 fprintf(stdout, "ERROR, no se pueden multiplicar cosas diferentes a enteros\n" );
                 exit(-1);
+              }if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
+                  es_variable1 = 0;
+              }else{
+                  es_variable1=1;
               }
-              //con la tabla de simbolos habria que ver si es variable o no, de momento generalazmaos a siempre variable
+              if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $3.lexema, &e, idAmbito)==ERROR){
+                  es_variable2 = 0;
+              }else{
+                  es_variable2=1;
+              }
 
-              multiplicar(salida,1,1);
-              $$.tipo = $1.tipo;
+                multiplicar(salida,es_variable1,es_variable2);
+                $$.tipo = $1.tipo;
+                sprintf($$.lexema, "multiplicar*");
             }
         //no tengo claro si - o ! es la funcion no, creo que ! es no y - es cambiar_signo
-        | '-' exp %prec NEG  {fprintf(salida,";R:\texp: '-' exp \n");}
+        | '-' exp %prec NEG  {
+              fprintf(salida,";R:\texp: '-' exp \n");
+              if($2.tipo != ENTERO ){
+                fprintf(stdout, "ERROR, no se pueden cambiar_signo cosas diferentes a enteros\n" );
+                exit(-1);
+              }
+              if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $2.lexema, &e, idAmbito)==ERROR){
+                  es_variable1 = 0;
+              }else{
+                  es_variable1=1;
+              }
+              cambiar_signo(salida, es_variable1);
+              $$.tipo = $2.tipo;
+              sprintf($$.lexema, "cambiar_signo-");
+
+            }
 
         | exp TOK_AND exp  {
               fprintf(salida,";R:\texp: exp TOK_AND exp  \n");
@@ -471,24 +571,19 @@ exp:    exp '+' exp {
               }
         | TOK_IDENTIFICADOR/* cambiar "identificador" por "idf_llamada_funcion"*/ {
           fprintf(salida,";R:\texp: TOK_IDENTIFICADOR\n");
-          e=NULL;
-          idAmbito=NULL;
-          //if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, e, idAmbito)==OK){
+          if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==OK){
               escribir_operando(salida, $1.lexema, 1);
-              //$$.tipo = (*e)->tipo;
+              $$.tipo = e->tipo;
               $$.es_direccion = 1;
-          //}
-          // else{
-          //     printf("ERROR SEMANTICO: %d:%d - Identificador %s no declarado\n", line, columna-yyleng, $1.lexema);
-          //     exit(-1);
-          // }
-        //tipo aun no lo se
-          /*en_exp_list = 0
-            Comprobar nombre funcion
-            BuscarTS */
+          }
+          else{
+              printf("ERROR SEMANTICO: %d:%d - Identificador %s no declarado\n", line, columna-yyleng, $1.lexema);
+              exit(-1);
+          }
         }
         | constante  {
                 fprintf(salida,";R:\texp: constante \n");
+
                 $$.tipo = $1.tipo;
                 $$.es_direccion = $1.es_direccion;
         }
@@ -619,10 +714,12 @@ comparacion: exp TOK_IGUAL exp {
 constante: constante_logica {fprintf(salida,";R:\tconstante: constante_logica\n");
                 $$.tipo = $1.tipo;
                 $$.es_direccion = $1.es_direccion;
+                //es_variable=0;
         }
         | constante_entera  {fprintf(salida,";R:\tconstante: constante_entera\n");
                 $$.tipo = $1.tipo;
                 $$.es_direccion = $1.es_direccion;
+                //es_variable=0;
         }
         ;
 constante_logica: TOK_TRUE {fprintf(salida,";R:\tconstante_logica: TOK_TRUE\n");
@@ -661,7 +758,7 @@ identificador: TOK_IDENTIFICADOR
                 elementoTablaSimbolos *elemento = nodo_crearElementoTablaSimbolos();
                 elemento = nodo_set_ElementoTablaSimbolos(elemento,
                                           $1.lexema,
-                													0,
+                													clase_actual,
                 													VARIABLE,
                 													$1.tipo,
                 													0,
@@ -689,7 +786,7 @@ identificador: TOK_IDENTIFICADOR
                 								        	0,
                 													NULL);
 
-                if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, e, idAmbito)==ERROR){
+                if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
                   if($1.tipo == BOOLEAN || $1.tipo == ENTERO){
                     if(insertarTablaSimbolosAmbitos(tsa, $1.lexema,  elemento) == ERROR){
                       printf("ERROR SEMANTICO: %d:%d - Identificador %s duplicado\n",line, columna-yyleng, $1.lexema);
@@ -705,6 +802,7 @@ identificador: TOK_IDENTIFICADOR
                 }
 
               nodo_free_ElementoTablaSimbolos(elemento);
+              //nodo_free_ElementoTablaSimbolos(e);
         }
         /* idf
          guardar[posParam] --> nombreParam = $1.lexema, tipo_Actual*/

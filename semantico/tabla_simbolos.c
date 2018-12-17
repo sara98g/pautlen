@@ -152,8 +152,6 @@ int cerrarClase(tablaSimbolosClases* t, char *id_clase, int num_atributos_clase,
 
 	e = nodo_crearElementoTablaSimbolos();
 
-	e->clave = id_clase;
-	e->categoria = CLASE;
 	e->numero_atributos_clase = num_atributos_clase;
 	e->numero_atributos_instancia = num_atributos_instancia;
 	e->numero_metodos_sobreescribibles = num_metodos_sobreescribibles;
@@ -517,8 +515,7 @@ int buscarParaDeclararMiembroInstancia(tablaSimbolosClases *t, char * nombre_cla
 *
 **/
 int buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, char* id, elementoTablaSimbolos ** e, char * id_ambito){
-printf("SE METE EN BUSCARTS_ACTUAL-520\n");
-  NodoHash *n;
+	NodoHash *n;
 	char aux[1000] = "";
 
 	if (!t || !id){
@@ -529,14 +526,9 @@ printf("SE METE EN BUSCARTS_ACTUAL-520\n");
                 /*strcpy(aux, t->nombre_global);
                 strcpy(aux, "_");
                 strcpy(aux, id);*/
-    printf("AMBITO GLOBAL\n");
-
 		n = buscarNodoHash(t->global, id);
 		if(n){
-      printf("NECUNTRA EN L NODO\n");
-
 			*e = nodo_get_ElementoTablaSimbolos(n);
-      printf("NO PASA DE LA FUN");
 			strcpy(id_ambito, t->nombre_global);
 			return OK;
 		}
@@ -713,20 +705,17 @@ int insertarTablaSimbolosClases(tablaSimbolosClases * grafo, char* id_clase,
 int insertarTablaSimbolosAmbitos(tablaSimbolosAmbitos * tA, char* id_clase, elementoTablaSimbolos *e){
 
 	if (!tA || !id_clase || !e){
-    printf("Error al insertar, algun parametro esta a NULL");
 		return ERROR;
 	}
 
 	if (tA->idAmbito == CERRADO){
-    printf("Error el ambito esta cerrado");
 		return ERROR;
 	}
 	if (tA->idAmbito == GLOBAL){
-    if (insertarNodoHash(tA->global, id_clase, e) == ERROR){
-      printf("Error al insertar el Nodo Hash\n");
+		if (insertarNodoHash(tA->global, id_clase, e) == ERROR){
 			return ERROR;
 		}
-    }
+	}
 	if (tA->idAmbito == LOCAL){
 		if (insertarNodoHash(tA->local, id_clase, e) == ERROR){
 			return ERROR;

@@ -43,12 +43,9 @@ int nodo_free_ElementoTablaSimbolos(elementoTablaSimbolos * e){
 }
 
 elementoTablaSimbolos * nodo_get_ElementoTablaSimbolos(NodoHash *n){
-	printf("FUNCION N_GETELEM");
-
-		if (!n){
+    if (!n){
         return NULL;
     }
-		printf("FUNCION N_GETELEM, %s", n->info);
     return n->info;
 }
 
@@ -81,10 +78,10 @@ elementoTablaSimbolos * nodo_set_ElementoTablaSimbolos(elementoTablaSimbolos *e,
 								        			int posicion_acumulada_atributos_instancia,
 								        			int posicion_acumulada_metodos_sobreescritura,
 													int * tipo_args){
-    // if(!e){
-    // 	printf("\n_No hay elem_");
-    // 	return NULL;
-    // }
+    if(!e){
+    	printf("\n_No hay elem_");
+    	return NULL;
+    }
     if (!id){
     	printf("\n_No hay id_");
     	return NULL;
@@ -127,6 +124,7 @@ elementoTablaSimbolos * nodo_set_ElementoTablaSimbolos(elementoTablaSimbolos *e,
 
 TablaHash* crearTablaHash(int tam) {
 	TablaHash *th;
+        int i=0;
 
     if ((th = (TablaHash *) malloc(sizeof(TablaHash)))) {
         if (!(th->tabla = (NodoHash **) calloc(tam, sizeof(NodoHash *)))) {
@@ -136,10 +134,10 @@ TablaHash* crearTablaHash(int tam) {
         th->tam = tam;
     }
 
-        th->lista = (char**) malloc(sizeof(char*)*1000);
-        /*for(i=0; i<1000; i++)
-            th->lista[i] = (char*) malloc(sizeof(char)*1000);
-        */th->nElem = 0;
+        th->lista = (char**) malloc(sizeof(char*)*100);
+        for(i=0; i<100; i++)
+            th->lista[i] = (char*) malloc(sizeof(char)*100);
+        th->nElem = 0;
 
     return th;
 }
@@ -185,14 +183,14 @@ int eliminarTablaHash(TablaHash *th) {
                 }
             }
             free(th->tabla);
-
-            /*for(x=0; x<1000; x++){
+            /*
+            for(x=0; x<100; x++){
 
                     free(th->lista[x]);
 
-            }*/
-
-			free(th->lista);
+            }
+            */
+						free(th->lista);
 
         }
         free(th);
@@ -205,7 +203,6 @@ int eliminarTablaHash(TablaHash *th) {
 int funcionHash(char *clave) {
 	int h = HASH_INI;
     char *p = clave;
-
 	while(*p != 0){
 		h = h*HASH_FACTOR + *p;
         //printf("\tclave:%s *clave:%d, p:%s, *p:%d, h:%d\n",clave , *clave, p, *p, h);
@@ -219,35 +216,39 @@ int funcionHash(char *clave) {
         printf("\tclave:%s *clave:%d, p:%s, *p:%d, h:%d\n",clave , *clave, p, *p, h);
     }
     */
-		return h;
+    return h;
 }
 
 
 NodoHash* crearNodoHash(char *clave, elementoTablaSimbolos *info) {
-		NodoHash *nh;
-		nh = (NodoHash *)malloc(sizeof(NodoHash));
-		if (!nh){
+	NodoHash *nh;
+
+        if(info){
+            nh = (NodoHash *) malloc(sizeof(NodoHash));
+            nh->info = info;
+            nh->clave = (char*) malloc (sizeof(char)*(strlen(clave)+1));
+            if(!nh->clave){
+                    free(nh);
+                    return NULL;
+            }
+            strcpy(nh->clave, clave);
+            nh->siguiente = NULL;
+        }
+
+        else if ((nh = (NodoHash *) malloc(sizeof(NodoHash)))) {
+    	nh->info = nodo_crearElementoTablaSimbolos();
+        if (!nh->info){
+        	free(nh);
+			return NULL;
+        }
+		nh->clave = (char*) malloc (sizeof(char)*(strlen(clave)+1));
+		if(!nh->clave){
+			free(nh);
 			return NULL;
 		}
-    	nh->clave = (char*) malloc (sizeof(char)*(strlen(clave)+1));
-        if(!nh->clave){
-                free(nh);
-                return NULL;
-        }
-        strcpy(nh->clave, clave);
+		strcpy(nh->clave, clave);
         nh->siguiente = NULL;
-        if(info){
-						nh->info = info;
-
-        } else{
-	    	nh->info = nodo_crearElementoTablaSimbolos();
-	        if (!nh->info){
-	        	free(nh);
-				return NULL;
-	        }
-
-    	}
-
+    }
     return nh;
 }
 void destruirNodoHash(NodoHash *nh){
@@ -272,31 +273,33 @@ int insertarNodoHash(TablaHash *th, char *clave, elementoTablaSimbolos *info) {
             return ERROR;
         }
     }
-		ind = funcionHash(clave) % th->tam;
 
+    ind = funcionHash(clave) % th->tam;
 	//printf("\t\tInsertar en la posicion: %d\n", ind);
+
 	if (!(n = crearNodoHash(clave, info))) {
         return ERROR;
     }
 
     if(th->nElem > 0){
-      if(th->tabla[ind]){
-    		n2 = th->tabla[ind];
-    		while(n2->siguiente){
-    			n2 = n2->siguiente;
-    		}
-    		n2->siguiente = n;
-      }else{
-        th->tabla[ind] = n;
+        if(th->tabla[ind]){
+    	n2 = th->tabla[ind];
+    	while(n2->siguiente){
+    		n2 = n2->siguiente;
+    	}
+    	n2->siguiente = n;
+        } else {
+            th->tabla[ind] = n;
         }
-    }else{
-				th->tabla[ind] = (NodoHash*)malloc(sizeof(NodoHash));
-      	th->tabla[ind] = n;
-				    }
+    } else {
+        th->tabla[ind] = n;
+    }
 
     th->lista[th->nElem] = clave;
     th->nElem++;
-		return OK;
+
+
+    return OK;
 }
 
 
@@ -307,13 +310,11 @@ NodoHash* buscarNodoHash(TablaHash *th, char *clave) {
 
         return NULL;
     }
-
-		fh = funcionHash(clave);
-
-		//printf("\tFuncion Hash: %d\n", fh);
+	fh = funcionHash(clave);
+	//printf("\tFuncion Hash: %d\n", fh);
     ind = fh % th->tam;
-		n = th->tabla[ind];
-	 	if (!n){
+    n = th->tabla[ind];
+    if (!n){
         return NULL;
     }
 
@@ -322,8 +323,6 @@ NodoHash* buscarNodoHash(TablaHash *th, char *clave) {
     }
     return n;
 }
-
-
 bool printHashDot(FILE* fp, TablaHash* th){
 	register int i;
 	register int tam;

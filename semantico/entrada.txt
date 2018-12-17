@@ -1,8 +1,8 @@
 main{
   int x;
-  int x;
-
-  x = 8;
+  int y;
+  scanf x;
+  y = - x;
   printf x;
-
+  printf y;
 }

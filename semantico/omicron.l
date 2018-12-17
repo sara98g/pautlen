@@ -119,7 +119,7 @@ printf      {fprintf(salida,";D:\t%s\n",yytext);
 
 {ENTERO}		{fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
-					//strcpy(yylval.atributos.lexema,yytext);
+					strcpy(yylval.atributos.lexema,yytext);
 					yylval.atributos.valor_entero = atoi(yytext);
 					return TOK_CONSTANTE_ENTERA;}
 false       {fprintf(salida,";D:\t%s\n",yytext);
