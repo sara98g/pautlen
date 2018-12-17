@@ -1,7 +1,13 @@
 main{
-  boolean y;
+  int y;
   int x;
-  scanf x;
-  y = (x > 5);
-  printf y;
+  x = 3;
+  y = 6;
+  if ( (y == 2) || (x == 3) ) {
+  printf 7;
+  }
+  else{
+    printf 1;
+  }
+  printf 5;
 }

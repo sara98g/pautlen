@@ -366,16 +366,30 @@ void escribir(FILE* fpasm, int es_variable, int tipo){
 	fprintf(fpasm, "\tcall print_endofline\n");
 }
 
-void if_then_ini(FILE * fpasm, int etiqueta ){
-  fprintf(fpasm, "\n;---Funcion if---\n");
+void ifthen_inicio(FILE * fpasm, int exp_es_variable, int etiqueta){
+  fprintf(fpasm, "\n;---Funcion ifthen_inicio---\n");
   fprintf(fpasm,"\tpop eax\n");
-  fprintf(fpasm,"\tmov eax , [eax]\n");
+  if(exp_es_variable)
+    fprintf(fpasm,"\tmov eax , [eax]\n");
   fprintf(fpasm,"\tcmp eax, 0\n");
   fprintf(fpasm,"\tje near fin_si%d\n",etiqueta );
 
 }
 
-void if_then_fin(FILE* fpasm,int etiqueta){
-  fprintf(fpasm, "\n;---Funcion fin if---\n");
+void ifthen_fin(FILE* fpasm,int etiqueta){
+  fprintf(fpasm, "\n;---Funcion ifthen_fin---\n");
   fprintf(fpasm,"fin_si%d:\n", etiqueta);
+}
+
+
+void ifthenelse_fin_then( FILE * fpasm, int etiqueta){
+  fprintf(fpasm, "\n;---Funcion ifthenelse_fin_then---\n");
+  fprintf(fpasm,"jmp near fin_sino%d\n", etiqueta);
+  ifthen_fin(fpasm, etiqueta);
+
+}
+
+void ifthenelse_fin( FILE * fpasm, int etiqueta){
+  fprintf(fpasm, "\n;---Funcion ifthenelse_fin---\n");
+  fprintf(fpasm,"fin_sino%d:\n", etiqueta);
 }

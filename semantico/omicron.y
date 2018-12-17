@@ -45,6 +45,9 @@
   %type <atributos> condicional
   %type <atributos> while
   %type <atributos> while_exp
+  %type <atributos> if_exp
+  %type <atributos> if_exp_sentencias
+
 
   %token TOK_NONE
   %token TOK_CLASS
@@ -109,7 +112,6 @@ programa:  TOK_MAIN '{' declaraciones iniciar_codigo escribir_variables funcione
         | TOK_MAIN '{' funciones sentencias '}' {fprintf(salida,";R:\tprograma: TOK_MAIN '{' funciones sentencias '}'\n"); escribir_fin(salida);}
         ;
 
-/*REVISAR CON LA TABLA DE SIMBOLOS*/
 iniciar_codigo: /*vacio*/
         {
         escribir_subseccion_data(salida);
@@ -197,7 +199,6 @@ clase_vector: TOK_ARRAY tipo '[' constante_entera ']' {
             }
         | TOK_ARRAY tipo '[' constante_entera ',' constante_entera ']' {fprintf(salida,";R:\tclase_vector: TOK_ARRAY tipo '[' constante_entera ',' constante_entera ']'\n");}
         ;
-//AQUI SI ES identificador NO TOK
 identificadores:
           identificador
             {fprintf(salida,";R:\tidentificadores: identificador\n");}
@@ -297,7 +298,6 @@ destruir_objeto: TOK_DISCARD TOK_IDENTIFICADOR {fprintf(salida,";R:\tdestruir_ob
 
 bloque: condicional {
         fprintf(salida,";R:\tbloque: condicional\n");
-        fprintf(stdout,"EN EL BLOQUE CONDICIONAL\n");
       }
         | bucle{fprintf(salida,";R:\tbloque: bucle\n");}
         ;
@@ -346,29 +346,43 @@ elemento_vector: TOK_IDENTIFICADOR '[' exp ']' {
               }
         ;
 
-condicional: if_exp inicio_if sentencias '}' fin_if{
+condicional: if_exp sentencias '}' {
         fprintf(salida,";R:\tcondicional: TOK_IF '(' exp ')' '{' sentencias '}' \n");
         printf("PRIMER MENSAJE\n");
-      }
-        |    if_exp ')' '{' sentencias '}' TOK_ELSE '{' sentencias '}'{fprintf(salida,";R:\tcondicional: TOK_IF '(' exp ')' '{' sentencias '}' TOK_ELSE '{' sentencias '}' \n");}
+        ifthen_fin(salida, $1.etiqueta);
+
+        }
+        |   if_exp_sentencias  TOK_ELSE '{' sentencias '}' {
+          fprintf(salida,";R:\tcondicional: TOK_IF '(' exp ')' '{' sentencias '}' TOK_ELSE '{' sentencias '}' \n");
+          ifthenelse_fin(salida, $1.etiqueta);
+
+        }
+
         ;
-inicio_if: /*vacio*/{
-    if_then_ini(salida, etiqueta_global++);
-}
-fin_if: /*vacio*/{
-    if_then_fin(salida, etiqueta_global++);
-}
+
+
+
 
 if_exp : TOK_IF '(' exp ')' '{' {
     fprintf(salida,";R:\tif_exp: TOK_IF '(' exp \n");
     printf("EL TIPO DE LA EXP: %d\n", $3.tipo);
     if($3.tipo != BOOLEANO){
-      printf("Error tipo distinto de BOOLEANO\n");
+      printf("ERROR SEMANTICO: %d:%d No se puede hacer if en distinto de boolean\n", line, columna - yyleng);
     }
-    etiqueta_global++;
-    if_then_ini(salida, etiqueta_global);
+    $$.etiqueta = etiqueta_global++;
+    if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $3.lexema, &e, idAmbito)==ERROR){
+      es_variable1 = 0;
+    }else{
+      es_variable1=1;
+    }
+    ifthen_inicio(salida, es_variable1, $$.etiqueta);
 
 };
+if_exp_sentencias: if_exp sentencias '}'{
+    $$.etiqueta = $1.etiqueta;
+
+    ifthenelse_fin_then(salida, $1.etiqueta);
+}
 
 bucle: while_exp sentencias '}'{
       fprintf(salida,";R:\tbucle: TOK_WHILE exp '{' sentencias '}' \n");
@@ -519,7 +533,6 @@ exp:    exp '+' exp {
                 $$.es_direccion=0;
                 sprintf($$.lexema, "multiplicar*");
             }
-        //no tengo claro si - o ! es la funcion no, creo que ! es no y - es cambiar_signo
         | '-' exp %prec NEG  {
               fprintf(salida,";R:\texp: '-' exp \n");
               if($2.tipo !=ENTERO){
@@ -676,7 +689,7 @@ comparacion: exp TOK_IGUAL exp {
                 strcpy($$.lexema, "igual==");
               }
               else{
-                fprintf(stdout, "ERROR, no se puede hacer == entre cosas diferentes\n" );
+                printf("ERROR SEMANTICO: %d:%d - No se puede hacer la comparacion == entre objetos de diferentes tipos\n",line, columna-yyleng);
                 exit(-1);
               }
         }
@@ -700,7 +713,7 @@ comparacion: exp TOK_IGUAL exp {
               }
 
               else{
-                fprintf(stdout, "ERROR, no se puede hacer != entre cosas diferentes\n" );
+                printf("ERROR SEMANTICO: %d:%d - No se puede hacer la comparacion != entre objetos de diferentes tipos\n",line, columna-yyleng);
                 exit(-1);
               }
             }
@@ -725,7 +738,7 @@ comparacion: exp TOK_IGUAL exp {
                 sprintf($$.lexema, "menoigual<=");
               }
               else{
-                fprintf(stdout, "ERROR, no se puede hacer <= entre cosas diferentes a enteros\n" );
+                printf("ERROR SEMANTICO: %d:%d - No se puede hacer la comparacion <= entre objetos no enteros\n",line, columna-yyleng);
                 exit(-1);
               }
             }
@@ -746,32 +759,39 @@ comparacion: exp TOK_IGUAL exp {
                 mayor_igual(salida, es_variable1, es_variable2, etiqueta_global++);
                 $$.tipo = BOOLEANO;
                 $$.es_direccion = 0;
-                sprintf($$.lexema, "mayorigual<=");
+                sprintf($$.lexema, "mayorigual>=");
               }
               else{
-                fprintf(stdout, "ERROR, no se puede hacer >= entre cosas diferentes a enteros\n" );
+                printf("ERROR SEMANTICO: %d:%d - No se puede hacer la comparacion >= entre objetos no enteros\n",line, columna-yyleng);
                 exit(-1);
               }
             }
         | exp '<' exp {
               fprintf(salida,";R:\tcomparacion: exp < exp \n");
-              //esto es provisional
-              $1.tipo=ENTERO;
-              $3.tipo=ENTERO;
 
               if($1.tipo == $3.tipo && $1.tipo==ENTERO){
-                //con la ts hay qu ver si son variables
-                menor(salida, 1, 1, etiqueta_global++);
+                if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
+                    es_variable1 = 0;
+                }else{
+                    es_variable1=1;
+                }
+                if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $3.lexema, &e, idAmbito)==ERROR){
+                    es_variable2 = 0;
+                }else{
+                    es_variable2=1;
+                }
+                menor(salida, es_variable1, es_variable2, etiqueta_global++);
                 $$.tipo = BOOLEANO;
+                $$.es_direccion = 0;
+                sprintf($$.lexema, "mayor>");
               }
               else{
-                fprintf(stdout, "ERROR, no se puede hacer < entre cosas diferentes aENTEROs\n" );
+                printf("ERROR SEMANTICO: %d:%d - No se puede hacer la comparacion < entre objetos no enteros\n",line, columna-yyleng);
                 exit(-1);
               }
             }
         | exp '>' exp {
               fprintf(salida,";R:\tcomparacion: exp > exp \n");
-              //esto es provisional
 
               if($1.tipo == $3.tipo && $1.tipo==ENTERO){
                 if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
@@ -790,7 +810,7 @@ comparacion: exp TOK_IGUAL exp {
                 sprintf($$.lexema, "mayor>");
               }
               else{
-                fprintf(stdout, "ERRO, no se puede hacer > entre cosas diferentes a enteros\n" );
+                printf("ERROR SEMANTICO: %d:%d - No se puede hacer la comparacion > entre objetos no enteros\n",line, columna-yyleng);
                 exit(-1);
               }
             }
