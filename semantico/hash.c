@@ -49,6 +49,9 @@ elementoTablaSimbolos * nodo_get_ElementoTablaSimbolos(NodoHash *n){
     return n->info;
 }
 
+
+
+
 elementoTablaSimbolos * nodo_set_ElementoTablaSimbolos(elementoTablaSimbolos *e,
 												    char* id,
 													int clase,
@@ -233,6 +236,7 @@ NodoHash* crearNodoHash(char *clave, elementoTablaSimbolos *info) {
             }
             strcpy(nh->clave, clave);
             nh->siguiente = NULL;
+
         }
 
         else if ((nh = (NodoHash *) malloc(sizeof(NodoHash)))) {
@@ -276,31 +280,87 @@ int insertarNodoHash(TablaHash *th, char *clave, elementoTablaSimbolos *info) {
 
     ind = funcionHash(clave) % th->tam;
 	//printf("\t\tInsertar en la posicion: %d\n", ind);
-
 	if (!(n = crearNodoHash(clave, info))) {
         return ERROR;
     }
-
-    if(th->nElem > 0){
-        if(th->tabla[ind]){
-    	n2 = th->tabla[ind];
-    	while(n2->siguiente){
-    		n2 = n2->siguiente;
-    	}
-    	n2->siguiente = n;
-        } else {
-            th->tabla[ind] = n;
+	  if(th->nElem > 0){
+        if(th->tabla[ind] != NULL ){
+    			n2 = th->tabla[ind];
+    			while(n2->siguiente){
+    				n2 = n2->siguiente;
+    			}
+    			n2->siguiente = n;
         }
-    } else {
-        th->tabla[ind] = n;
+				else{
+          th->tabla[ind] =nodoHash_copiar(n);
+	      }
     }
-
+		else{
+			th->tabla[ind] =nodoHash_copiar(n);
+    }
+		
     th->lista[th->nElem] = clave;
     th->nElem++;
 
-
-    return OK;
+		return OK;
 }
+
+
+NodoHash* nodoHash_copiar(NodoHash* nodo){
+    NodoHash* new_nodo = NULL;
+
+    if(!nodo)
+        return NULL;
+
+    if(!(new_nodo = (NodoHash*)malloc(sizeof(NodoHash))))
+    	return NULL;
+
+    if(!(new_nodo->clave = (char*)malloc((strlen(nodo->clave)+1)* sizeof(char)))){
+        free(new_nodo);
+        return NULL;
+    }
+    if(!strcpy(new_nodo->clave, nodo->clave)){
+        free(new_nodo->clave);
+        free(new_nodo);
+        return NULL;
+    }
+		new_nodo->info = nodo_crearElementoTablaSimbolos();
+		new_nodo->info = nodo_set_ElementoTablaSimbolos(new_nodo->info,
+																					nodo->info->clave,
+																					nodo->info->clase,
+																					nodo->info->categoria,
+																					nodo->info->tipo,
+																					0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													1,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                													0,
+                								        	0,
+                								        	0,
+                													NULL);
+
+		new_nodo->siguiente = nodo->siguiente;
+    return new_nodo;
+}
+
+
+
 
 
 NodoHash* buscarNodoHash(TablaHash *th, char *clave) {
@@ -321,6 +381,7 @@ NodoHash* buscarNodoHash(TablaHash *th, char *clave) {
     while (n && (!n->info || strcmp(n->clave, clave))) {
         n = n->siguiente;
     }
+
     return n;
 }
 bool printHashDot(FILE* fp, TablaHash* th){

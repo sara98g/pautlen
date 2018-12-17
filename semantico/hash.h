@@ -92,6 +92,7 @@ typedef struct TablaHash {
 	NodoHash **tabla; /*Array de punteros a los primeros elementos de la tabla hash.*/
 } TablaHash;
 
+NodoHash* nodoHash_copiar(NodoHash* nodo);
 /**************** FUNCIONES ****************/
 elementoTablaSimbolos * nodo_crearElementoTablaSimbolos();
 int nodo_free_ElementoTablaSimbolos(elementoTablaSimbolos * e);

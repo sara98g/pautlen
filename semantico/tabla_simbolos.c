@@ -522,12 +522,13 @@ int buscarTablaSimbolosAmbitoActual(tablaSimbolosAmbitos * t, char* id, elemento
 		return ERROR;
 	}
 	if(t->idAmbito == GLOBAL){
-		//sprintf(aux, "%s_%s", t->nombre_global, id);
+		//sprintf(aux, "% s_%s", t->nombre_global, id);
                 /*strcpy(aux, t->nombre_global);
                 strcpy(aux, "_");
                 strcpy(aux, id);*/
 		n = buscarNodoHash(t->global, id);
 		if(n){
+
 			*e = nodo_get_ElementoTablaSimbolos(n);
 			strcpy(id_ambito, t->nombre_global);
 			return OK;

@@ -123,10 +123,13 @@ printf      {fprintf(salida,";D:\t%s\n",yytext);
 					yylval.atributos.valor_entero = atoi(yytext);
 					return TOK_CONSTANTE_ENTERA;}
 false       {fprintf(salida,";D:\t%s\n",yytext);
+						strcpy(yylval.atributos.lexema,yytext);
 					columna += yyleng;
 					return TOK_FALSE;}
 true        {fprintf(salida,";D:\t%s\n",yytext);
 					columna += yyleng;
+					strcpy(yylval.atributos.lexema,yytext);
+					
 					return TOK_TRUE;}
 
 

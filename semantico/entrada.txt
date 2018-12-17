@@ -1,8 +1,7 @@
 main{
+  boolean y;
   int x;
-  int y;
   scanf x;
-  y = - x;
-  printf x;
+  y = (x > 5);
   printf y;
 }

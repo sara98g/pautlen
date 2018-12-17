@@ -180,8 +180,8 @@ modificadores_clase: /*vacio*/ {
 clase_escalar: tipo {fprintf(salida,";R:\tclase_escalar: tipo\n"); clase_actual= ESCALAR;}
         ;
 
-tipo: TOK_INT {fprintf(salida,";R:\ttipo: TOK_INT\n"); tipo_actual = ENTERO;}
-        | TOK_BOOLEAN {fprintf(salida,";R:\ttipo: TOK_BOOLEAN\n"); tipo_actual = BOOLEAN;} /*REVISAR NO SE QUE VALOR ES BOOLEAN*/
+tipo: TOK_INT {fprintf(salida,";R:\ttipo: TOK_INT\n"); tipo_actual =ENTERO;}
+        | TOK_BOOLEAN {fprintf(salida,";R:\ttipo: TOK_BOOLEAN\n"); tipo_actual = BOOLEANO;} /*REVISAR NO SE QUE VALOR ES BOOLEAN*/
         ;
 
 clase_objeto: '{' TOK_IDENTIFICADOR '}' {fprintf(salida,";R:\tclase_objeto: '{' TOK_IDENTIFICADOR '}'\n");}
@@ -304,18 +304,25 @@ bloque: condicional {
 
 asignacion: TOK_IDENTIFICADOR '=' exp {
                 fprintf(salida,";R:\tasignacion: TOK_IDENTIFICADOR '=' exp\n");
-                if ($1.tipo == $3.tipo){
+                e = NULL;
+                idAmbito[0] = '\0';
+                if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito) == ERROR){
+                  printf("ERROR SEMANTICO: %d:%d No existe identificador %s\n", line, columna - yyleng, $1.lexema);
+                  exit(-1);
+                }
+
+                if (e->tipo == $3.tipo){
                   if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $3.lexema, &e, idAmbito)==ERROR){
                     asignar(salida, $1.lexema, 0);
                   }else{
                     asignar(salida, $1.lexema, 1);
                   }
                 }else{
-                  printf("ERROR SEMANTICO: %d:%d No se puede asignar dos objetos de diferentes tipos\n", line, columna );
+                  printf("ERROR SEMANTICO: %d:%d No se puede asignar dos objetos de diferentes tipos\n", line, columna - yyleng);
                   exit(-1);
                 }
 
-                }
+            }
         | elemento_vector '=' exp {
               fprintf(salida,";R:\tasignacion: elemento_vector '=' exp\n");
               if ($1.tipo == $3.tipo){
@@ -325,7 +332,7 @@ asignacion: TOK_IDENTIFICADOR '=' exp {
                   asignar(salida, $1.lexema, 1);
                 }
               }else{
-                printf("ERROR SEMANTICO: %d:%d No se puede asignar dos objetos de diferentes tipos\n", line, columna );
+                printf("ERROR SEMANTICO: %d:%d No se puede asignar dos objetos de diferentes tipos\n", line, columna - yyleng);
                 exit(-1);
               }
             }
@@ -355,8 +362,8 @@ fin_if: /*vacio*/{
 if_exp : TOK_IF '(' exp ')' '{' {
     fprintf(salida,";R:\tif_exp: TOK_IF '(' exp \n");
     printf("EL TIPO DE LA EXP: %d\n", $3.tipo);
-    if($3.tipo != BOOLEAN){
-      printf("Error tipo distinto de BOOLEAN\n");
+    if($3.tipo != BOOLEANO){
+      printf("Error tipo distinto de BOOLEANO\n");
     }
     etiqueta_global++;
     if_then_ini(salida, etiqueta_global);
@@ -369,8 +376,8 @@ bucle: while_exp sentencias '}'{
     ;
 
 while_exp: while exp ')' '{'{
-      if($2.tipo != BOOLEAN){
-        fprintf(stdout, "ERROR, WHILE distinto de booleano\n" );
+      if($2.tipo != BOOLEANO){
+        fprintf(stdout, "ERROR, WHILE distinto de BOOLEANOo\n" );
       }
 
       $$.etiqueta = $1.etiqueta;
@@ -400,10 +407,10 @@ lectura: TOK_SCANF TOK_IDENTIFICADOR {
             //   }
             // }
 
-            if(e->tipo == ENTERO)
-              leer(salida, $2.lexema, ENTERO);
+            if(e->tipo ==ENTERO)
+              leer(salida, $2.lexema,ENTERO);
             else
-              leer(salida, $2.lexema, BOOLEAN);
+              leer(salida, $2.lexema, BOOLEANO);
 
         }
         | TOK_SCANF elemento_vector {fprintf(salida,";R:\tlectura: TOK_SCANF elemento_vector \n");}
@@ -426,7 +433,7 @@ retorno_funcion: TOK_RETURN exp {fprintf(salida,";R:\tretorno_funcion: TOK_RETUR
 exp:    exp '+' exp {
 
               fprintf(salida,";R:\texp: exp '+' exp \n");
-              if($1.tipo != ENTERO || $3.tipo!= ENTERO ){
+              if($1.tipo !=ENTERO|| $3.tipo!=ENTERO){
                 fprintf(stdout, "ERROR, no se pueden sumar cosas diferentes a enteros\n" );
                 exit(-1);
               }
@@ -442,13 +449,14 @@ exp:    exp '+' exp {
               }
 
               sumar(salida,es_variable1,es_variable2);
+              $$.es_direccion=0;
               $$.tipo = $1.tipo;
               sprintf($$.lexema, "suma+");
             }
         | exp '-' exp {
               fprintf(salida,";R:\texp: exp '-' exp \n");
-              if($1.tipo != ENTERO || $3.tipo!= ENTERO ){
-                fprintf(stdout, "ERROR, no se pueden restar cosas diferentes a enteros\n" );
+              if($1.tipo !=ENTERO|| $3.tipo!=ENTERO){
+                fprintf(stdout, "ERROR, no se pueden restar cosas diferentes aENTEROs\n" );
                 exit(-1);
               }
               if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
@@ -464,12 +472,13 @@ exp:    exp '+' exp {
 
                 restar(salida,es_variable1,es_variable2);
                 $$.tipo = $1.tipo;
+                $$.es_direccion=0;
                 sprintf($$.lexema, "resta-");
 
             }
         | exp '/' exp {
               fprintf(salida,";R:\texp: exp '/' exp \n");
-              if($1.tipo != ENTERO || $3.tipo!= ENTERO ){
+              if($1.tipo !=ENTERO|| $3.tipo!=ENTERO){
                 fprintf(stdout, "ERROR, no se pueden dividir cosas diferentes a enteros\n" );
                 exit(-1);
               }
@@ -486,11 +495,12 @@ exp:    exp '+' exp {
 
                 dividir(salida,es_variable1,es_variable2);
                 $$.tipo = $1.tipo;
+                $$.es_direccion=0;
                 sprintf($$.lexema, "division/");
             }
         | exp '*' exp  {
               fprintf(salida,";R:\texp: exp '*' exp \n");
-              if($1.tipo != ENTERO || $3.tipo!= ENTERO ){
+              if($1.tipo !=ENTERO|| $3.tipo!=ENTERO){
                 fprintf(stdout, "ERROR, no se pueden multiplicar cosas diferentes a enteros\n" );
                 exit(-1);
               }if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
@@ -506,12 +516,13 @@ exp:    exp '+' exp {
 
                 multiplicar(salida,es_variable1,es_variable2);
                 $$.tipo = $1.tipo;
+                $$.es_direccion=0;
                 sprintf($$.lexema, "multiplicar*");
             }
         //no tengo claro si - o ! es la funcion no, creo que ! es no y - es cambiar_signo
         | '-' exp %prec NEG  {
               fprintf(salida,";R:\texp: '-' exp \n");
-              if($2.tipo != ENTERO ){
+              if($2.tipo !=ENTERO){
                 fprintf(stdout, "ERROR, no se pueden cambiar_signo cosas diferentes a enteros\n" );
                 exit(-1);
               }
@@ -522,51 +533,75 @@ exp:    exp '+' exp {
               }
               cambiar_signo(salida, es_variable1);
               $$.tipo = $2.tipo;
+              $$.es_direccion=0;
               sprintf($$.lexema, "cambiar_signo-");
 
             }
 
         | exp TOK_AND exp  {
               fprintf(salida,";R:\texp: exp TOK_AND exp  \n");
-              //esto es provisional
-              $1.tipo=1;
-              $3.tipo=1;
-
-              if($1.tipo != BOOLEAN || $3.tipo!= BOOLEAN ){
+              if($1.tipo != BOOLEANO || $3.tipo!= BOOLEANO ){
                 fprintf(stdout, "ERROR, no se puede hacer AND entre cosas diferentes a booleanos\n" );
                 exit(-1);
               }
               //con la tabla de simbolos habria que ver si es variable o no, de momento generalazmaos a siempre variable
+              if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
+                  es_variable1 = 0;
+              }else{
+                  es_variable1=1;
+              }
+              if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $3.lexema, &e, idAmbito)==ERROR){
+                  es_variable2 = 0;
+              }else{
+                  es_variable2=1;
+              }
 
-              y(salida,1,1);
+              y(salida,es_variable1,es_variable2);
               $$.tipo = $1.tipo;
+              $$.es_direccion=0;
+              sprintf($$.lexema, "and&&");
+
             }
         | exp TOK_OR exp  {
               fprintf(salida,";R:\texp: exp TOK_OR exp \n");
-              //esto es provisional
-              $1.tipo=1;
-              $3.tipo=1;
 
-              if($1.tipo != BOOLEAN || $3.tipo!= BOOLEAN ){
+              if($1.tipo != BOOLEANO || $3.tipo!= BOOLEANO ){
                 fprintf(stdout, "ERROR, no se puede hacer OR entre cosas diferentes a booleanos\n" );
                 exit(-1);
               }
-              //con la tabla de simbolos habria que ver si es variable o no, de momento generalazmaos a siempre variable
+              if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
+                  es_variable1 = 0;
+              }else{
+                  es_variable1=1;
+              }
+              if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $3.lexema, &e, idAmbito)==ERROR){
+                  es_variable2 = 0;
+              }else{
+                  es_variable2=1;
+              }
 
-              o(salida,1,1);
-              $$.tipo = $1.tipo;}
+              o(salida,es_variable1,es_variable2);
+              $$.tipo = $1.tipo;
+              $$.es_direccion=0;
+              sprintf($$.lexema, "or||");
+
+            }
         | '!' exp {
               fprintf(salida,";R:\texp:'!' exp\n");
-              //esto e sprovisoinal
-              $2.tipo=1;
 
-              if($2.tipo != BOOLEAN){
+              if($2.tipo != BOOLEANO){
                 fprintf(stdout, "ERROR, no se puede hacer NO en cosas diferentes a booleanos\n" );
                 exit(-1);
               }
-              //con la tabla de simbolos habria que ver si es variable o no, de momento generalazmaos a siempre variable
-
-              no(salida,1,etiqueta_global++);
+              if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $2.lexema, &e, idAmbito)==ERROR){
+                  es_variable1 = 0;
+              }else{
+                  es_variable1=1;
+              }
+              $$.es_direccion=0;
+              $$.tipo = $2.tipo;
+              no(salida,es_variable1,etiqueta_global++);
+              sprintf($$.lexema, "!no");
 
               }
         | TOK_IDENTIFICADOR/* cambiar "identificador" por "idf_llamada_funcion"*/ {
@@ -575,6 +610,8 @@ exp:    exp '+' exp {
               escribir_operando(salida, $1.lexema, 1);
               $$.tipo = e->tipo;
               $$.es_direccion = 1;
+              strcpy($$.lexema, $1.lexema);
+
           }
           else{
               printf("ERROR SEMANTICO: %d:%d - Identificador %s no declarado\n", line, columna-yyleng, $1.lexema);
@@ -590,8 +627,8 @@ exp:    exp '+' exp {
         | '(' exp ')'  {fprintf(salida,";R:\texp:'(' exp ')' \n");}
         | '(' comparacion ')'  {
             fprintf(salida,";R:\texp:'(' comparacion ')' \n");
-            printf("DENTRO DE LA COMPARACION EL TIPO: %d\n", $2.tipo);
             $$.tipo = $2.tipo;
+            strcpy($$.lexema, $2.lexema);
           }
         | elemento_vector  {fprintf(salida,";R:\texp: elemento_vector");}
         | TOK_IDENTIFICADOR '(' lista_expresiones ')' {fprintf(salida,";R:\texp: TOK_IDENTIFICADOR '(' lista_expresiones ')' \n");}
@@ -621,12 +658,22 @@ resto_lista_expresiones: ',' exp resto_lista_expresiones {fprintf(salida,";R:\tl
 
 comparacion: exp TOK_IGUAL exp {
               fprintf(salida,";R:\tcomparacion: exp TOK_IGUAL exp \n");
-              printf("LLEGAMOS AL MENOR IGUAL\n");
 
               if($1.tipo == $3.tipo){
-                //con la ts hay qu ver si son variables
-                igual(salida, 1, 1, etiqueta_global++);
-                $$.tipo = BOOLEAN;
+                if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
+                    es_variable1 = 0;
+                }else{
+                    es_variable1=1;
+                }
+                if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $3.lexema, &e, idAmbito)==ERROR){
+                    es_variable2 = 0;
+                }else{
+                    es_variable2=1;
+                }
+                igual(salida, es_variable1, es_variable2, etiqueta_global++);
+                $$.tipo = BOOLEANO;
+                $$.es_direccion = 0;
+                strcpy($$.lexema, "igual==");
               }
               else{
                 fprintf(stdout, "ERROR, no se puede hacer == entre cosas diferentes\n" );
@@ -636,10 +683,22 @@ comparacion: exp TOK_IGUAL exp {
         | exp TOK_DISTINTO exp {
               fprintf(salida,";R:\tcomparacion: exp TOK_DISTINTO exp \n");
               if($1.tipo == $3.tipo){
-                //con la ts hay qu ver si son variables
-                distinto(salida, 1, 1, etiqueta_global++);
-                $$.tipo = BOOLEAN;
+                if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
+                    es_variable1 = 0;
+                }else{
+                    es_variable1=1;
+                }
+                if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $3.lexema, &e, idAmbito)==ERROR){
+                    es_variable2 = 0;
+                }else{
+                    es_variable2=1;
+                }
+                distinto(salida, es_variable1, es_variable2, etiqueta_global++);
+                $$.tipo = BOOLEANO;
+                $$.es_direccion = 0;
+                sprintf($$.lexema, "distinto!=");
               }
+
               else{
                 fprintf(stdout, "ERROR, no se puede hacer != entre cosas diferentes\n" );
                 exit(-1);
@@ -648,13 +707,22 @@ comparacion: exp TOK_IGUAL exp {
         //estos solo enteros
         | exp TOK_MENORIGUAL exp {
               fprintf(salida,";R:\tcomparacion: exp TOK_MENORIGUAL exp \n");
-              //esto es provisional
-              $1.tipo=ENTERO;
-              $3.tipo=ENTERO;
+
               if($1.tipo == $3.tipo && $1.tipo==ENTERO){
-                //con la ts hay qu ver si son variables
-                menor_igual(salida, 1, 1, etiqueta_global++);
-                $$.tipo = BOOLEAN;
+                if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
+                    es_variable1 = 0;
+                }else{
+                    es_variable1=1;
+                }
+                if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $3.lexema, &e, idAmbito)==ERROR){
+                    es_variable2 = 0;
+                }else{
+                    es_variable2=1;
+                }
+                menor_igual(salida, es_variable1, es_variable2, etiqueta_global++);
+                $$.tipo = BOOLEANO;
+                $$.es_direccion = 0;
+                sprintf($$.lexema, "menoigual<=");
               }
               else{
                 fprintf(stdout, "ERROR, no se puede hacer <= entre cosas diferentes a enteros\n" );
@@ -663,14 +731,22 @@ comparacion: exp TOK_IGUAL exp {
             }
         | exp TOK_MAYORIGUAL exp{
               fprintf(salida,";R:\tcomparacion: exp TOK_MAYORIGUAL exp \n");
-              //esto es provisional
-              $1.tipo=ENTERO;
-              $3.tipo=ENTERO;
 
               if($1.tipo == $3.tipo && $1.tipo==ENTERO){
-                //con la ts hay qu ver si son variables
-                mayor_igual(salida, 1, 1, etiqueta_global++);
-                $$.tipo = BOOLEAN;
+                if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
+                    es_variable1 = 0;
+                }else{
+                    es_variable1=1;
+                }
+                if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $3.lexema, &e, idAmbito)==ERROR){
+                    es_variable2 = 0;
+                }else{
+                    es_variable2=1;
+                }
+                mayor_igual(salida, es_variable1, es_variable2, etiqueta_global++);
+                $$.tipo = BOOLEANO;
+                $$.es_direccion = 0;
+                sprintf($$.lexema, "mayorigual<=");
               }
               else{
                 fprintf(stdout, "ERROR, no se puede hacer >= entre cosas diferentes a enteros\n" );
@@ -686,23 +762,32 @@ comparacion: exp TOK_IGUAL exp {
               if($1.tipo == $3.tipo && $1.tipo==ENTERO){
                 //con la ts hay qu ver si son variables
                 menor(salida, 1, 1, etiqueta_global++);
-                $$.tipo = BOOLEAN;
+                $$.tipo = BOOLEANO;
               }
               else{
-                fprintf(stdout, "ERROR, no se puede hacer < entre cosas diferentes a enteros\n" );
+                fprintf(stdout, "ERROR, no se puede hacer < entre cosas diferentes aENTEROs\n" );
                 exit(-1);
               }
             }
         | exp '>' exp {
               fprintf(salida,";R:\tcomparacion: exp > exp \n");
               //esto es provisional
-              $1.tipo=ENTERO;
-              $3.tipo=ENTERO;
 
               if($1.tipo == $3.tipo && $1.tipo==ENTERO){
-                //con la ts hay qu ver si son variables
-                mayor(salida, 1, 1, etiqueta_global++);
-                $$.tipo = BOOLEAN;
+                if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
+                    es_variable1 = 0;
+                }else{
+                    es_variable1=1;
+                }
+                if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $3.lexema, &e, idAmbito)==ERROR){
+                    es_variable2 = 0;
+                }else{
+                    es_variable2=1;
+                }
+                mayor(salida, es_variable1, es_variable2, etiqueta_global++);
+                $$.tipo = BOOLEANO;
+                $$.es_direccion = 0;
+                sprintf($$.lexema, "mayor>");
               }
               else{
                 fprintf(stdout, "ERRO, no se puede hacer > entre cosas diferentes a enteros\n" );
@@ -714,17 +799,15 @@ comparacion: exp TOK_IGUAL exp {
 constante: constante_logica {fprintf(salida,";R:\tconstante: constante_logica\n");
                 $$.tipo = $1.tipo;
                 $$.es_direccion = $1.es_direccion;
-                //es_variable=0;
         }
         | constante_entera  {fprintf(salida,";R:\tconstante: constante_entera\n");
                 $$.tipo = $1.tipo;
                 $$.es_direccion = $1.es_direccion;
-                //es_variable=0;
         }
         ;
 constante_logica: TOK_TRUE {fprintf(salida,";R:\tconstante_logica: TOK_TRUE\n");
                     char valor[]={"1"};
-                    $$.tipo = BOOLEAN;
+                    $$.tipo = BOOLEANO;
                     $$.es_direccion = 0;
                     $$.valor_entero = 1;
                     escribir_operando(salida, valor, 0);
@@ -732,7 +815,7 @@ constante_logica: TOK_TRUE {fprintf(salida,";R:\tconstante_logica: TOK_TRUE\n");
         }
         | TOK_FALSE {fprintf(salida,";R:\tconstante_logica: TOK_FALSE\n");
                     char valor[]={"0"};
-                    $$.tipo = BOOLEAN;
+                    $$.tipo = BOOLEANO;
                     $$.es_direccion = 0;
                     $$.valor_entero = 0;
                     escribir_operando(salida, valor, 0);
@@ -741,7 +824,7 @@ constante_logica: TOK_TRUE {fprintf(salida,";R:\tconstante_logica: TOK_TRUE\n");
         ;
 constante_entera: TOK_CONSTANTE_ENTERA {
                 fprintf(salida,";R:\tconstante_entera: TOK_CONSTANTE_ENTERA\n");
-                $$.tipo = ENTERO;
+                $$.tipo =ENTERO;
                 $$.es_direccion = 0;
                 char valor[20];
                 sprintf(valor, "%d", $1.valor_entero);
@@ -754,6 +837,9 @@ identificador: TOK_IDENTIFICADOR
         {
                 fprintf(salida, ";R:\tidentificador: TOK_IDENTIFICADOR");
                 $1.tipo=tipo_actual;
+
+                tipo_actual =0;
+
 
                 elementoTablaSimbolos *elemento = nodo_crearElementoTablaSimbolos();
                 elemento = nodo_set_ElementoTablaSimbolos(elemento,
@@ -787,7 +873,7 @@ identificador: TOK_IDENTIFICADOR
                 													NULL);
 
                 if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
-                  if($1.tipo == BOOLEAN || $1.tipo == ENTERO){
+                  if($1.tipo == BOOLEANO || $1.tipo ==ENTERO){
                     if(insertarTablaSimbolosAmbitos(tsa, $1.lexema,  elemento) == ERROR){
                       printf("ERROR SEMANTICO: %d:%d - Identificador %s duplicado\n",line, columna-yyleng, $1.lexema);
                       exit(-1);
@@ -797,11 +883,12 @@ identificador: TOK_IDENTIFICADOR
 
                 }
                 else{
-                  printf("ERROR, variable ya declarada\n");
+                  printf("ERROR SEMANTICO: %d:%d - Identificador %s duplicado\n",line, columna-yyleng, $1.lexema);
                   exit(-1);
                 }
 
               nodo_free_ElementoTablaSimbolos(elemento);
+
               //nodo_free_ElementoTablaSimbolos(e);
         }
         /* idf
