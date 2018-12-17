@@ -393,3 +393,24 @@ void ifthenelse_fin( FILE * fpasm, int etiqueta){
   fprintf(fpasm, "\n;---Funcion ifthenelse_fin---\n");
   fprintf(fpasm,"fin_sino%d:\n", etiqueta);
 }
+
+void while_inicio(FILE * fpasm, int etiqueta){
+  fprintf(fpasm,"\n;---Funcion while_inicio---\n");
+  fprintf(fpasm,"inicio_while%d:\n", etiqueta);
+}
+
+void while_exp_pila (FILE * fpasm, int exp_es_variable, int etiqueta){
+  fprintf(fpasm, "\n;---Funcion while_exp_pila---\n");
+  fprintf(fpasm,"\tpop eax\n");
+  if(exp_es_variable)
+    fprintf(fpasm,"\tmov eax , [eax]\n");
+  fprintf(fpasm,"\tcmp eax, 0\n");
+  fprintf(fpasm,"\tje near fin_while%d\n",etiqueta );
+
+}
+
+void while_fin( FILE * fpasm, int etiqueta){
+  fprintf(fpasm, "\n;---Funcion while_fin---\n");
+  fprintf(fpasm,"jmp near inicio_while%d\n", etiqueta);
+  fprintf(fpasm,"fin_while%d:\n", etiqueta);
+}

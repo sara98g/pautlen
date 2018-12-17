@@ -386,6 +386,7 @@ if_exp_sentencias: if_exp sentencias '}'{
 
 bucle: while_exp sentencias '}'{
       fprintf(salida,";R:\tbucle: TOK_WHILE exp '{' sentencias '}' \n");
+      while_fin(salida, $1.etiqueta);
     }
     ;
 
@@ -393,12 +394,19 @@ while_exp: while exp ')' '{'{
       if($2.tipo != BOOLEANO){
         fprintf(stdout, "ERROR, WHILE distinto de BOOLEANOo\n" );
       }
+      if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $2.lexema, &e, idAmbito)==ERROR){
+        es_variable1 = 0;
+      }else{
+        es_variable1=1;
+      }
 
       $$.etiqueta = $1.etiqueta;
+      while_exp_pila(salida, es_variable1, $$.etiqueta);
 };
 
 while: TOK_WHILE '('{
     $$.etiqueta = etiqueta_global++;
+    while_inicio(salida, $$.etiqueta);
 };
 
 lectura: TOK_SCANF TOK_IDENTIFICADOR {
