@@ -78,8 +78,8 @@ elementoTablaSimbolos * nodo_set_ElementoTablaSimbolos(elementoTablaSimbolos *e,
 													int posicion_metodo_sobreescribible,
 													int num_acumulado_atributos_instancia,
 													int num_acumulado_metodos_sobreescritura,
-								        			int posicion_acumulada_atributos_instancia,
-								        			int posicion_acumulada_metodos_sobreescritura,
+						        			int posicion_acumulada_atributos_instancia,
+						        			int posicion_acumulada_metodos_sobreescritura,
 													int * tipo_args){
     if(!e){
     	printf("\n_No hay elem_");
@@ -94,7 +94,7 @@ elementoTablaSimbolos * nodo_set_ElementoTablaSimbolos(elementoTablaSimbolos *e,
 	e->tipo_args = tipo_args;
 	e->categoria = categoria;
 	e->tipo = tipo;
-	e->clase = ESCALAR;
+	e->clase = clase;
 	e->tamanio = tamanio;
 	e->numero_parametros = numero_parametros;
 	e->posicion_parametro = posicion_parametro;
@@ -106,14 +106,13 @@ elementoTablaSimbolos * nodo_set_ElementoTablaSimbolos(elementoTablaSimbolos *e,
 	e->numero_metodos_sobreescribibles = numero_metodos_sobreescribibles;
 	e->numero_metodos_no_sobreescribibles = numero_metodos_no_sobreescribibles;
 	e->tipo_acceso = tipo_acceso;
-        e->tipo_miembro = tipo_miembro;
+  e->tipo_miembro = tipo_miembro;
 	e->posicion_atributo_instancia = posicion_atributo_instancia;
 	e->posicion_metodo_sobreescribible = posicion_metodo_sobreescribible;
 	e->num_acumulado_atributos_instancia = num_acumulado_atributos_instancia;
 	e->num_acumulado_metodos_sobreescritura = num_acumulado_metodos_sobreescritura;
 	/*Faltan campos relacionados a estos*/
-	/*int clase,
-	int estructura,
+/*	int estructura,
 	int dimension,
 	int filas,
 	int columnas,
@@ -298,7 +297,7 @@ int insertarNodoHash(TablaHash *th, char *clave, elementoTablaSimbolos *info) {
 		else{
 			th->tabla[ind] =nodoHash_copiar(n);
     }
-		
+
     th->lista[th->nElem] = clave;
     th->nElem++;
 
@@ -331,29 +330,29 @@ NodoHash* nodoHash_copiar(NodoHash* nodo){
 																					nodo->info->categoria,
 																					nodo->info->tipo,
 																					0,
+                													nodo->info->direcciones,
+                													nodo->info->numero_parametros,
+                													nodo->info->numero_variables_locales,
+                													nodo->info->posicion_variable_local,
+                													nodo->info->posicion_parametro,
+                													0,
+                													nodo->info->tamanio,
                 													0,
                 													0,
                 													0,
-                													0,
-                													0,
-                													0,
-                													1,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
+                													nodo->info->numero_atributos_clase,
+                													nodo->info->numero_atributos_instancia,
+                													nodo->info->numero_metodos_sobreescribibles,
+                													nodo->info->numero_metodos_no_sobreescribibles,
+                													nodo->info->tipo_acceso,
+                													nodo->info->tipo_miembro,
+                													nodo->info->posicion_atributo_instancia,
+                													nodo->info->posicion_metodo_sobreescribible,
+                													nodo->info->num_acumulado_atributos_instancia,
+                													nodo->info->num_acumulado_metodos_sobreescritura,
                 								        	0,
                 								        	0,
-                													NULL);
+                													nodo->info->tipo_args);
 
 		new_nodo->siguiente = nodo->siguiente;
     return new_nodo;
