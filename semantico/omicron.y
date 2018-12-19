@@ -15,23 +15,16 @@
   extern int columna;
   extern int line;
   void yyerror( char *s);
-
-<<<<<<< HEAD
   int clase_actual, tipo_actual, tamanio_vector_actual, tamanio_actual;
   int es_variable1, es_variable2;
   int etiqueta_global = 0;
   int pos_var_local_actual, num_params_actual, pos_params_actual, num_var_local,num_vars_boolean_actual;
   int fn_return=0;
   int en_exp_list = 0;
-=======
-  int clase_actual, tipo_actual, tamanio_vector_actual, tamanio_actual,es_variable1, es_variable2;
-  int etiqueta_global = 0;
->>>>>>> 187777dc77a38ca47e2094bd07ff1e66f7062fac
 
   char idAmbito[64];
   elementoTablaSimbolos * e = NULL;
-
-<<<<<<< HEAD
+  
   typedef struct{
     char nombre[MAX_ID+1];
     int tipo;
@@ -39,9 +32,6 @@
   }parametros;
 
   parametros array_param[64];
-
-=======
->>>>>>> 187777dc77a38ca47e2094bd07ff1e66f7062fac
 
 
 %}
@@ -67,7 +57,7 @@
   %type <atributos> while_exp
   %type <atributos> if_exp
   %type <atributos> if_exp_sentencias
-<<<<<<< HEAD
+
   %type <atributos> idf_llamada
   %type <atributos> tipo
   %type <atributos> fn_declaration
@@ -77,9 +67,6 @@
   %type <atributos> parametro_funcion
   %type <atributos> idpf
 
-
-=======
->>>>>>> 187777dc77a38ca47e2094bd07ff1e66f7062fac
 
 
   %token TOK_NONE
@@ -214,18 +201,11 @@ modificadores_clase: /*vacio*/ {
 
 clase_escalar: tipo {fprintf(salida,";R:\tclase_escalar: tipo\n"); clase_actual= ESCALAR;}
         ;
-
-<<<<<<< HEAD
 tipo: TOK_INT {
         fprintf(salida,";R:\ttipo: TOK_INT\n");
         tipo_actual =ENTERO;
         $$.tipo=tipo_actual;}
         | TOK_BOOLEAN {fprintf(salida,";R:\ttipo: TOK_BOOLEAN\n"); tipo_actual = BOOLEANO; $$.tipo=tipo_actual;} /*REVISAR NO SE QUE VALOR ES BOOLEAN*/
-=======
-tipo: TOK_INT {fprintf(salida,";R:\ttipo: TOK_INT\n"); tipo_actual =ENTERO;}
-        | TOK_BOOLEAN {fprintf(salida,";R:\ttipo: TOK_BOOLEAN\n"); tipo_actual = BOOLEANO;} /*REVISAR NO SE QUE VALOR ES BOOLEAN*/
->>>>>>> 187777dc77a38ca47e2094bd07ff1e66f7062fac
-        ;
 
 clase_objeto: '{' TOK_IDENTIFICADOR '}' {fprintf(salida,";R:\tclase_objeto: '{' TOK_IDENTIFICADOR '}'\n");}
         ;
@@ -267,8 +247,6 @@ funcion: TOK_FUNCTION modificadores_acceso tipo_retorno TOK_IDENTIFICADOR '(' pa
       }
         */
         ;
-<<<<<<< HEAD
-
 fn_declaration: fn_complete_name '{' declaraciones_funcion {
         declararFuncion(salida, $1.lexema, num_var_local );
 
@@ -393,35 +371,7 @@ fn_name: TOK_FUNCTION modificadores_acceso tipo_retorno TOK_IDENTIFICADOR{
         pos_params_actual = 0;
         strcpy($$.lexema, $4.lexema);
         $$.tipo= $3.tipo;
-=======
-/*
-fn_declaration: fn_complete_name '{' declaraciones_funcion{
-        Actualizar info funcion numVariables en la GLOBAL
-
-        Leer mazo despues futuros Rodri y Sara
-          _nombre_funcion
-          push ebp
-          mov ebp, esp
-          sub esp, 4* n_variables (Reservar espacio variables locales)
-
-}*/
-/*
-fn_complete_name: fn_name '(' parametros_funcion '}'{
-        Crear nombre de la funcion --> nombre funcion @tipo1 @tipo2
-        Abrir AmbitoLocal :
-          1. insertar fn en GLOBAL
-          2. crear Local
-        Recoorer el array_params --> insertarTS (cada param tiene[ nombre,tipo, posicion en el array, ¿Escalar?])
-}*/
-/*
-fn_name: TOK_FUNCTION modificadores_acceso tipo_retorno identificador{
-        num_vars_boolean_actual = 0;
-        pos_var_local_actual = 1;
-        num_params_actuales = 0;
-        pos_params_actual = 0:
-        $$.lexema = $4.lexema; (identificador)
-        $$.tipo= tipo_actual
->>>>>>> 187777dc77a38ca47e2094bd07ff1e66f7062fac
+2fac
 
 
 }*/
@@ -438,8 +388,6 @@ parametros_funcion: parametro_funcion resto_parametros_funcion {fprintf(salida,"
 resto_parametros_funcion: ';' parametro_funcion resto_parametros_funcion {fprintf(salida,";R:\tresto_parametros_funcion: ; parametro_funcion resto_parametros_funcion\n");}
         | /*vacio*/ {fprintf(salida,";R:\tresto_parametros_funcion:\n");}
         ;
-
-<<<<<<< HEAD
 parametro_funcion: tipo idpf {
           fprintf(salida,";R:\tparametro_funcion: tipo identificador\n");
           strcpy(array_param[pos_params_actual].nombre, $2.lexema);
@@ -503,12 +451,7 @@ idpf: TOK_IDENTIFICADOR {
 
 }
 
-=======
-parametro_funcion: tipo TOK_IDENTIFICADOR {fprintf(salida,";R:\tparametro_funcion: tipo identificador\n");}
-        | clase_objeto TOK_IDENTIFICADOR {fprintf(salida,";R:\tparametro_funcion: clase_objeto identificador\n");}
-        ;
 
->>>>>>> 187777dc77a38ca47e2094bd07ff1e66f7062fac
 declaraciones_funcion: declaraciones {fprintf(salida,";R:\tdeclaraciones_funcion: declaraciones_funcion\n");}
         | /*vacio*/ {fprintf(salida,";R:\tdeclaraciones_funcion:\n");}
         ;
@@ -537,7 +480,8 @@ bloque: condicional {
         fprintf(salida,";R:\tbloque: condicional\n");
       }
         | bucle{fprintf(salida,";R:\tbloque: bucle\n");}
-        ;
+
+;
 
 asignacion: TOK_IDENTIFICADOR '=' exp {
                 fprintf(salida,";R:\tasignacion: TOK_IDENTIFICADOR '=' exp\n");
