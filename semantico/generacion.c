@@ -431,10 +431,17 @@ void while_fin( FILE * fpasm, int etiqueta){
 }
 
 void declararFuncion(FILE * fd_s, char * nombre_funcion, int num_var_loc){
-  fprintf(fpasm, "\n;---Funcion declarar_funcion---\n");
-  fprintf(fpasm,"_%s:\n", nombre_funcion);
-  fprintf(fpasm,"\tpush ebp\n");
-  fprintf(fpasm,"\ttmov ebp ,esp\n");
-  fprintf(fpasm,"\tsub esp ,4*%d\n", num_var_loc);
+  fprintf(fd_s, "\n;---Funcion declarar_funcion---\n");
+  fprintf(fd_s,"_%s:\n", nombre_funcion);
+  fprintf(fd_s,"\tpush ebp\n");
+  fprintf(fd_s,"\tmov ebp ,esp\n");
+  fprintf(fd_s,"\tsub esp ,4 * %d\n", num_var_loc);
 
+}
+//PARA QUE SIRVE "es_variable"
+void retornarFuncion(FILE * fd_s, int es_variable){
+  fprintf(fd_s, "\n;---Funcion retornar_funcion---\n");
+  fprintf(fd_s,"\tmov esp ,ebp\n");
+  fprintf(fd_s,"\tpop dword ebp\n");
+  fprintf(fd_s,"\tret\n");
 }
