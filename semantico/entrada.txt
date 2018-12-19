@@ -1,11 +1,6 @@
 main{
-  int y;
-  int x;
-  x = 3;
-  y = 6;
-  while ( (x < y) ) {
-    printf 3;
-    x = x +1;
-  }
-  printf 10;
+  array int[5] x;
+
+  scanf x;
+  printf x[0];
 }
