@@ -17,10 +17,18 @@
   void yyerror( char *s);
 
   int clase_actual, tipo_actual, tamanio_vector_actual, tamanio_actual,es_variable1, es_variable2;
-  int etiqueta_global = 0;
+  int etiqueta_global = 0, pos_var_local_actual, num_pars_actual, pos_params_actual, en_exp_list = 0;
 
   char idAmbito[64];
   elementoTablaSimbolos * e = NULL;
+
+  typedef struct parametros{
+    char nombre[MAX_LONG_ID+1];
+    int tipo;
+    int clase;
+
+  };
+  parametros array_param[64];
 
 
 
@@ -47,7 +55,7 @@
   %type <atributos> while_exp
   %type <atributos> if_exp
   %type <atributos> if_exp_sentencias
-
+  %type <atributos> idf_llamada
 
   %token TOK_NONE
   %token TOK_CLASS
@@ -109,7 +117,7 @@
 %%
 
 programa:  TOK_MAIN '{' declaraciones iniciar_codigo escribir_variables funciones inicio_main sentencias '}' {fprintf(salida,";R:\tprograma: TOK_MAIN '{' declaraciones funciones sentencias '}'\n"); escribir_fin(salida);} /*REVISAR CON LA TABLA DE SIMBOLOS*/
-        | TOK_MAIN '{' funciones sentencias '}' {fprintf(salida,";R:\tprograma: TOK_MAIN '{' funciones sentencias '}'\n"); escribir_fin(salida);}
+        | TOK_MAIN '{' iniciar_codigo funciones inicio_main sentencias '}' {fprintf(salida,";R:\tprograma: TOK_MAIN '{' funciones sentencias '}'\n"); escribir_fin(salida);}
         ;
 
 iniciar_codigo: /*vacio*/
@@ -122,8 +130,8 @@ iniciar_codigo: /*vacio*/
 escribir_variables: /*vacio*/
         {
           TablaHash *th=NULL;
-        	 NodoHash *n=NULL;
-           elementoTablaSimbolos *e=NULL;
+        	NodoHash *n=NULL;
+          elementoTablaSimbolos *e=NULL;
           char* clave=NULL;
           int i;
           th = tsa->global;
@@ -182,8 +190,8 @@ modificadores_clase: /*vacio*/ {
 clase_escalar: tipo {fprintf(salida,";R:\tclase_escalar: tipo\n"); clase_actual= ESCALAR;}
         ;
 
-tipo: TOK_INT {fprintf(salida,";R:\ttipo: TOK_INT\n"); tipo_actual =ENTERO;}
-        | TOK_BOOLEAN {fprintf(salida,";R:\ttipo: TOK_BOOLEAN\n"); tipo_actual = BOOLEANO;} /*REVISAR NO SE QUE VALOR ES BOOLEAN*/
+tipo: TOK_INT {fprintf(salida,";R:\ttipo: TOK_INT\n"); tipo_actual =ENTERO; $$.tipo=tipo_actual;}
+        | TOK_BOOLEAN {fprintf(salida,";R:\ttipo: TOK_BOOLEAN\n"); tipo_actual = BOOLEANO; $$.tipo=tipo_actual;} /*REVISAR NO SE QUE VALOR ES BOOLEAN*/
         ;
 
 clase_objeto: '{' TOK_IDENTIFICADOR '}' {fprintf(salida,";R:\tclase_objeto: '{' TOK_IDENTIFICADOR '}'\n");}
@@ -199,6 +207,7 @@ clase_vector: TOK_ARRAY tipo '[' constante_entera ']' {
             }
         | TOK_ARRAY tipo '[' constante_entera ',' constante_entera ']' {fprintf(salida,";R:\tclase_vector: TOK_ARRAY tipo '[' constante_entera ',' constante_entera ']'\n");}
         ;
+
 identificadores:
           identificador
             {fprintf(salida,";R:\tidentificadores: identificador\n");}
@@ -209,8 +218,7 @@ identificadores:
 funciones: funcion funciones {fprintf(salida,";R:\tfunciones: funcion funciones\n");}
         | /*vacio*/  {fprintf(salida,";R:\tfunciones:\n");}
         ;
-/*CAMBIARLO A " fn_declaration sentencias '}' "*/
-funcion: TOK_FUNCTION modificadores_acceso tipo_retorno TOK_IDENTIFICADOR '(' parametros_funcion ')' '{' declaraciones_funcion sentencias'}'{
+funcion: fn_declaration sentencias'}'{
         fprintf(salida,";R:\tfuncion: TOK_FUNCTION modificadores_acceso tipo_retorno TOK_IDENTIFICADOR '(' parametro_funcion ')' declaraciones_funcion sentencia\n");}
         /*Cerrar el ambito*/
 
@@ -224,43 +232,142 @@ funcion: TOK_FUNCTION modificadores_acceso tipo_retorno TOK_IDENTIFICADOR '(' pa
       }
         */
         ;
-/*
+
 fn_declaration: fn_complete_name '{' declaraciones_funcion{
-        Actualizar info funcion numVariables en la GLOBAL
+        declararFuncion(salida, $1.lexema, num_var_loc );
 
-        Leer mazo despues futuros Rodri y Sara
-          _nombre_funcion
-          push ebp
-          mov ebp, esp
-          sub esp, 4* n_variables (Reservar espacio variables locales)
+}
 
-}*/
-/*
-fn_complete_name: fn_name '(' parametros_funcion '}'{
-        Crear nombre de la funcion --> nombre funcion @tipo1 @tipo2
-        Abrir AmbitoLocal :
-          1. insertar fn en GLOBAL
-          2. crear Local
-        Recoorer el array_params --> insertarTS (cada param tiene[ nombre,tipo, posicion en el array, ¿Escalar?])
-}*/
-/*
-fn_name: TOK_FUNCTION modificadores_acceso tipo_retorno identificador{
+fn_complete_name: fn_name '(' parametros_funcion ')'{
+        char nombre[64];
+        sprintf(nombre, "main_%s",$1.lexema);
+        int i;
+        for(i = 0; i < num_params_actuales; i++){
+          if(array_param[i].tipo == ENTERO)
+            strcat(nombre, "@1");
+          else
+            strcat(nombre, "@3");
+        }
+
+        if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, nombre, &e, idAmbito)==ERROR){
+
+          elementoTablaSimbolos *elemento = nodo_crearElementoTablaSimbolos();
+          elemento = nodo_set_ElementoTablaSimbolos(elemento,
+                                    nombre,
+                                    clase_actual,
+                                    FUNCION,
+                                    $1.tipo,
+                                    0,
+                                    0,
+                                    num_params_actuales,
+                                    0,
+                                    pos_var_local_actual,
+                                    0,
+                                    0,
+                                    1,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    ACCESO_TODOS,
+                                    MIEMBRO_NO_UNICO,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    NULL);
+          if(insertarTablaSimbolosAmbitos(tsa, nombre,  elemento) == ERROR){
+            printf("ERROR SEMANTICO: %d:%d - funcion %s duplicado\n",line, columna-yyleng, );
+            nodo_free_ElementoTablaSimbolos(elemento);
+            exit(-1);
+          }
+          if(abrirAmbitoMain(tsa, nombre, FUNCION, $1.tipo) == ERROR){
+            printf("Error abrir ambito local\n");
+            exit(-1);
+          }
+          nodo_free_ElementoTablaSimbolos(elemento);
+          for(i = 0; i < num_params_actual; i++){
+            if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, array_param[i].nombre, &e, idAmbito)==ERROR){
+              if(array_param[i].tipo == BOOLEANO || array_param[i].tipo ==ENTERO){
+                elemento = nodo_crearElementoTablaSimbolos();
+                elemento = nodo_set_ElementoTablaSimbolos(elemento,
+                                          array_param[i].nombre,
+                                          array_param[i].clase,
+                                          PARAMETRO,
+                                          array_param[i].tipo,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          1,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          0,
+                                          NULL);
+                if(insertarTablaSimbolosAmbitos(tsa, array_param[i].nombre,  elemento) == ERROR){
+                  printf("ERROR SEMANTICO: %d:%d - parametro %s duplicado\n",line, columna-yyleng, array_param[i].nombre);
+                  nodo_free_ElementoTablaSimbolos(elemento);
+                  exit(-1);
+                }
+                nodo_free_ElementoTablaSimbolos(elemento);
+            }
+            else{
+              printf("parametro ya declarado %s\n",array_param[i].nombre);
+              exit(-1);
+            }
+          }
+
+        }
+
+      else{
+        printf("ERROR SEMANTICO: %d:%d - funcion %s duplicado\n",line, columna-yyleng, $1.lexema);
+        exit(-1);
+      }
+      nodo_free_ElementoTablaSimbolos(elemento);
+      strcpy($$.lexema, $1.lexema);
+      $$.tipo=$1.tipo;
+
+    }
+}
+
+fn_name: TOK_FUNCTION modificadores_acceso tipo_retorno TOK_IDENTIFICADOR{
         num_vars_boolean_actual = 0;
         pos_var_local_actual = 1;
         num_params_actuales = 0;
         pos_params_actual = 0:
-        $$.lexema = $4.lexema; (identificador)
-        $$.tipo= tipo_actual
+        strcpy($$.lexema, $4.lexema);
+        $$.tipo= $3.tipo;
 
-
-}*/
+}
 
 tipo_retorno: TOK_NONE {fprintf(salida,";R:\ttipo_retorno: TOK_NONE\n");}
-        | tipo {fprintf(salida,";R:\tipo_retorno: tipo\n");}
+        | tipo {fprintf(salida,";R:\tipo_retorno: tipo\n"); $$.tipo=$1.tipo;}
         | clase_objeto {fprintf(salida,";R:\tipo_retorno: clase_objeto\n");}
         ;
 
-parametros_funcion: parametro_funcion resto_parametros_funcion {fprintf(salida,";R:\tparametros_funcion: parametro_funcion resto_parametros_funcion\n");}
+parametros_funcion: parametro_funcion resto_parametros_funcion {
+          fprintf(salida,";R:\tparametros_funcion: parametro_funcion resto_parametros_funcion\n");
+        }
         | /*vacio*/ {fprintf(salida,";R:\tparametros_funcion:\n");}
         ;
 
@@ -268,9 +375,21 @@ resto_parametros_funcion: ';' parametro_funcion resto_parametros_funcion {fprint
         | /*vacio*/ {fprintf(salida,";R:\tresto_parametros_funcion:\n");}
         ;
 
-parametro_funcion: tipo TOK_IDENTIFICADOR {fprintf(salida,";R:\tparametro_funcion: tipo identificador\n");}
+parametro_funcion: tipo idpf {
+          fprintf(salida,";R:\tparametro_funcion: tipo identificador\n");
+          strcpy(array_param[pos_params_actual].nombre, $2.lexema);
+          array_param[pos_params_actual].tipo = tipo_actual;
+          array_param[pos_params_actual].clase = clase_actual;
+          pos_params_actual++;
+          num_params_actuales++;
+      }
         | clase_objeto TOK_IDENTIFICADOR {fprintf(salida,";R:\tparametro_funcion: clase_objeto identificador\n");}
         ;
+
+idpf: TOK_IDENTIFICADOR {
+    strcpy($$.lexema, $1.lexema);
+
+}
 
 declaraciones_funcion: declaraciones {fprintf(salida,";R:\tdeclaraciones_funcion: declaraciones_funcion\n");}
         | /*vacio*/ {fprintf(salida,";R:\tdeclaraciones_funcion:\n");}
@@ -352,15 +471,12 @@ condicional: if_exp sentencias '}' {
         ifthen_fin(salida, $1.etiqueta);
 
         }
-        |   if_exp_sentencias  TOK_ELSE '{' sentencias '}' {
+        | if_exp_sentencias  TOK_ELSE '{' sentencias '}' {
           fprintf(salida,";R:\tcondicional: TOK_IF '(' exp ')' '{' sentencias '}' TOK_ELSE '{' sentencias '}' \n");
           ifthenelse_fin(salida, $1.etiqueta);
 
         }
-
         ;
-
-
 
 
 if_exp : TOK_IF '(' exp ')' '{' {
@@ -628,21 +744,49 @@ exp:    exp '+' exp {
         | TOK_IDENTIFICADOR/* cambiar "identificador" por "idf_llamada_funcion"*/ {
           fprintf(salida,";R:\texp: TOK_IDENTIFICADOR\n");
           if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==OK){
-              escribir_operando(salida, $1.lexema, 1);
-              $$.tipo = e->tipo;
-              $$.es_direccion = 1;
-              strcpy($$.lexema, $1.lexema);
+              if(e->categoria == VARIABLE){
+                if(tsa->ambito == GLOBAL){
+                  if(en_exp_list == 1){
+                    fprintf(salida, "\tpush dword [_%s]\n", $1.lexema);
+                  }
+                  else{
+                    escribir_operando(salida, $1.lexema, 1);
+                  }
+
+                  $$.tipo = e->tipo;
+                  $$.es_direccion = 1;
+                  strcpy($$.lexema, $1.lexema);
+                }
+                else if (tsa->ambito == LOCAL){
+                  num_var_loc++;
+                }
+
+              // }
+              // else if(e->categoria == PARAMETRO){
+              //   fprintf(salida, "\tpush dword [_%s]\n", $1.lexema);
+              //   $$.tipo = e->tipo;
+              //   $$.es_direccion = 1;
+              //   strcpy($$.lexema, $1.lexema);
+              //
+              // }
+              // else{
+              //   printf("EEROR AMBITO\n");
+              //   exit(-1);
+              // }
 
           }
-          else{
-              printf("ERROR SEMANTICO: %d:%d - Identificador %s no declarado\n", line, columna-yyleng, $1.lexema);
-              exit(-1);
-          }
+
         }
+        else{
+            printf("ERROR SEMANTICO: %d:%d - Identificador %s no declarado\n", line, columna-yyleng, $1.lexema);
+            exit(-1);
+        }
+      }
         | constante  {
                 fprintf(salida,";R:\texp: constante \n");
 
                 $$.tipo = $1.tipo;
+                $$.valor_entero = $1.valor_entero;
                 $$.es_direccion = $1.es_direccion;
         }
         | '(' exp ')'  {fprintf(salida,";R:\texp:'(' exp ')' \n");}
@@ -652,28 +796,59 @@ exp:    exp '+' exp {
             strcpy($$.lexema, $2.lexema);
           }
         | elemento_vector  {fprintf(salida,";R:\texp: elemento_vector");}
-        | TOK_IDENTIFICADOR '(' lista_expresiones ')' {fprintf(salida,";R:\texp: TOK_IDENTIFICADOR '(' lista_expresiones ')' \n");}
+        | idf_llamada '(' lista_expresiones ')' {
+          //numero parametros formales = actuales??s
+            fprintf(salida,";R:\texp: TOK_IDENTIFICADOR '(' lista_expresiones ')' \n");
+            fprintf(salida, "\tcall _%s\n", $1.lexema);
+            fprintf(salida, "\tadd esp, 4 * %d\n", num_params_actual);
+            fprintf(salida, "\tpush dword eax\n");
+            en_exp_list = 0;
+            $$.tipo = $1.tipo;
+            $$.es_direccion = $1.es_direccion;
+
+          }
         | identificador_clase TOK_IDENTIFICADOR '(' lista_expresiones ')' {fprintf(salida,";R:\texp: identificador_clase TOK_IDENTIFICADOR '(' lista_expresiones ')' \n");}
         | identificador_clase TOK_IDENTIFICADOR  {fprintf(salida,";R:\texp: identificador_clase TOK_IDENTIFICADOR \n");}
         ;
 
-/*idf_llamada_funcion: TOK_IDENTIFICADOR{
-         ¿en_exp_list == 1  ? --> ERR_SEMANTICO
-         $$.lexema = $1.lexema
-           num_params_actual = 0
-           en_exp_list = 1
+idf_llamada: TOK_IDENTIFICADOR{
 
-}*/
+         if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
+           printf("Esa funcion no existe %s\n" $1.lexema);
+           exit(-1);
+         }
+
+         if(e->categoria != FUNCION){
+           printf("Existe pero no es funcion %s\n", $1.lexema);
+         }
+         if(en_exp_list == 1){
+           printf("ERROR idf_llamada\n");
+           exit(-1);
+         }
+         $$.lexema = $1.lexema
+         num_params_actual = 0;
+         en_exp_list = 1;
+         $$.tipo = e->tipo;
+         $$.es_direccion=0;
+
+}
 
 identificador_clase: TOK_IDENTIFICADOR {fprintf(salida,";R:\tidentificador_clase: TOK_IDENTIFICADOR \n");}
         | TOK_ITSELF {fprintf(salida,";R:\tidentificador_clase: TOK_ITSELF \n");}
         ;
 
-lista_expresiones: exp resto_lista_expresiones  {fprintf(salida,";R:\tlista_expresiones: exp resto_lista_expresiones\n");}
+lista_expresiones: exp resto_lista_expresiones  {
+          fprintf(salida,";R:\tlista_expresiones: exp resto_lista_expresiones\n");
+          fprintf(salida, "\tpush dword %d\n", $1.valor_entero);
+
+        }
         | /*vacio*/ {fprintf(salida,";R:\tlista_expresiones:\n");}
         ;
 
-resto_lista_expresiones: ',' exp resto_lista_expresiones {fprintf(salida,";R:\tlista_expresiones: ',' exp resto_lista_expresiones\n");}
+resto_lista_expresiones: ',' exp resto_lista_expresiones {
+          fprintf(salida,";R:\tlista_expresiones: ',' exp resto_lista_expresiones\n");
+          fprintf(salida, "\tpush dword %d\n", $2.valor_entero);
+        }
         | /*vacio*/{fprintf(salida,";R:\tresto_lista_expresiones:\n");}
         ;
 
@@ -827,10 +1002,12 @@ comparacion: exp TOK_IGUAL exp {
 constante: constante_logica {fprintf(salida,";R:\tconstante: constante_logica\n");
                 $$.tipo = $1.tipo;
                 $$.es_direccion = $1.es_direccion;
+                $$.valor_entero = $1.valor_entero;
         }
         | constante_entera  {fprintf(salida,";R:\tconstante: constante_entera\n");
                 $$.tipo = $1.tipo;
                 $$.es_direccion = $1.es_direccion;
+                $$.valor_entero = $1.valor_entero;
         }
         ;
 constante_logica: TOK_TRUE {fprintf(salida,";R:\tconstante_logica: TOK_TRUE\n");
@@ -855,6 +1032,7 @@ constante_entera: TOK_CONSTANTE_ENTERA {
                 $$.tipo =ENTERO;
                 $$.es_direccion = 0;
                 char valor[20];
+                $$.valor_entero = $1.valor_entero;
                 sprintf(valor, "%d", $1.valor_entero);
                 escribir_operando(salida, valor, 0);
         }
@@ -868,42 +1046,41 @@ identificador: TOK_IDENTIFICADOR
 
                 tipo_actual =0;
 
-
-                elementoTablaSimbolos *elemento = nodo_crearElementoTablaSimbolos();
-                elemento = nodo_set_ElementoTablaSimbolos(elemento,
-                                          $1.lexema,
-                													clase_actual,
-                													VARIABLE,
-                													$1.tipo,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													1,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                													0,
-                								        	0,
-                								        	0,
-                													NULL);
-
                 if(buscarParaDeclararIdTablaSimbolosAmbitos(tsa, $1.lexema, &e, idAmbito)==ERROR){
                   if($1.tipo == BOOLEANO || $1.tipo ==ENTERO){
+                    elementoTablaSimbolos *elemento = nodo_crearElementoTablaSimbolos();
+                    elemento = nodo_set_ElementoTablaSimbolos(elemento,
+                                              $1.lexema,
+                    													clase_actual,
+                    													VARIABLE,
+                    													$1.tipo,
+                    													0,
+                    													0,
+                    													0,
+                    													0,
+                    													0,
+                    													0,
+                    													0,
+                    													1,
+                    													0,
+                    													0,
+                    													0,
+                    													0,
+                    													0,
+                    													0,
+                    													0,
+                    													0,
+                    													0,
+                    													0,
+                    													0,
+                    													0,
+                    													0,
+                    								        	0,
+                    								        	0,
+                    													NULL);
                     if(insertarTablaSimbolosAmbitos(tsa, $1.lexema,  elemento) == ERROR){
                       printf("ERROR SEMANTICO: %d:%d - Identificador %s duplicado\n",line, columna-yyleng, $1.lexema);
+                      nodo_free_ElementoTablaSimbolos(elemento);
                       exit(-1);
                     }
 

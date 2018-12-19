@@ -366,6 +366,16 @@ void escribir(FILE* fpasm, int es_variable, int tipo){
 	fprintf(fpasm, "\tcall print_endofline\n");
 }
 
+void ifthenelse_inicio(FILE * fpasm, int exp_es_variable, int etiqueta){
+  fprintf(fpasm, "\n;---Funcion ifthenelse_inicio---\n");
+  fprintf(fpasm,"\tpop eax\n");
+  if(exp_es_variable)
+    fprintf(fpasm,"\tmov eax , [eax]\n");
+  fprintf(fpasm,"\tcmp eax, 0\n");
+  fprintf(fpasm,"\tje near fin_si%d\n",etiqueta );
+
+}
+
 void ifthen_inicio(FILE * fpasm, int exp_es_variable, int etiqueta){
   fprintf(fpasm, "\n;---Funcion ifthen_inicio---\n");
   fprintf(fpasm,"\tpop eax\n");
@@ -373,6 +383,11 @@ void ifthen_inicio(FILE * fpasm, int exp_es_variable, int etiqueta){
     fprintf(fpasm,"\tmov eax , [eax]\n");
   fprintf(fpasm,"\tcmp eax, 0\n");
   fprintf(fpasm,"\tje near fin_si%d\n",etiqueta );
+
+}
+
+void if_exp_pila (FILE * fpasm, int exp_es_variable, int etiqueta){
+  ifthen_inicio(fpasm, exp_es_variable,  etiqueta);
 
 }
 
@@ -413,4 +428,13 @@ void while_fin( FILE * fpasm, int etiqueta){
   fprintf(fpasm, "\n;---Funcion while_fin---\n");
   fprintf(fpasm,"jmp near inicio_while%d\n", etiqueta);
   fprintf(fpasm,"fin_while%d:\n", etiqueta);
+}
+
+void declararFuncion(FILE * fd_s, char * nombre_funcion, int num_var_loc){
+  fprintf(fpasm, "\n;---Funcion declarar_funcion---\n");
+  fprintf(fpasm,"_%s:\n", nombre_funcion);
+  fprintf(fpasm,"\tpush ebp\n");
+  fprintf(fpasm,"\ttmov ebp ,esp\n");
+  fprintf(fpasm,"\tsub esp ,4*%d\n", num_var_loc);
+
 }

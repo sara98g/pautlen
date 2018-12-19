@@ -1,0 +1,11 @@
+buscarParaDeclararIdTablaSimbolosAmbitos
+Main_nombrefun - Main_nombrefun@1
+insertartsamain main_nombre (3 )
+insertas: eleme, nombre, clase ESCALAR, cat funcion,,n_parametros return 1 o 3, 0000, tipo acceso 3, miembro no unico 2, 000000, NULL
+
+var globa - escribir op
+var local - lea y push
+param - lea y tpush
+asignar, print, scanf
+
+lea para _x, no  []
